@@ -1,0 +1,3379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breacher // OPFOR Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:wght@300;400;700&family=Oswald:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --panel: #141418;
+    --panel2: #1a1a20;
+    --border: #2a2a35;
+    --red: #c0392b;
+    --red-bright: #e74c3c;
+    --red-dim: #7b1c12;
+    --amber: #d4a017;
+    --text: #e8e6e0;
+    --text-dim: #888882;
+    --text-faint: #444440;
+    --green: #27ae60;
+    --accent: #3d8fd1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(180deg, #0a0a0c 0%, var(--bg) 100%);
+    border-bottom: 2px solid var(--red);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--text);
+  }
+  .logo span { color: var(--red-bright); }
+
+  .fop-counter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .fop-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .fop-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--red-bright);
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .fop-budget-wrap {
+    text-align: right;
+  }
+
+  .budget-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+
+  .budget-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+  }
+
+  #budget-input {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    width: 52px;
+    text-align: center;
+    padding: 2px 4px;
+    outline: none;
+  }
+
+  #budget-input:focus { border-color: var(--red); }
+
+  .remaining-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .remaining-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    transition: color 0.2s;
+  }
+
+  .remaining-val.ok { color: var(--green); }
+  .remaining-val.warn { color: var(--amber); }
+  .remaining-val.over { color: var(--red-bright); }
+
+  /* LAYOUT */
+  .app {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    height: calc(100vh - 64px);
+  }
+
+  /* LEFT: UNIT LIBRARY */
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel2);
+  }
+
+  .sidebar-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .filter-tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .filter-tab {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-tab:hover { border-color: var(--red-dim); color: var(--text); }
+  .filter-tab.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+  .unit-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px;
+  }
+
+  .unit-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .unit-card:hover {
+    border-left-color: var(--red);
+    background: #1e1e26;
+  }
+
+  .unit-card.type-street-thug { border-left-color: #555; }
+  .unit-card.type-militia { border-left-color: var(--amber); }
+  .unit-card.type-trained { border-left-color: var(--accent); }
+  .unit-card.type-hired-gun { border-left-color: var(--red-bright); }
+  .unit-card.type-named-hg { border-left-color: #c471ed; }
+
+  .unit-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+
+  .unit-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .unit-fop-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--red-bright);
+    white-space: nowrap;
+  }
+
+  .unit-fop-badge small {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    vertical-align: middle;
+  }
+
+  .unit-stats-mini {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .stat-pill {
+    font-size: 10px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 3px;
+  }
+
+  .stat-pill-label {
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-size: 9px;
+  }
+
+  .stat-pill-val {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .unit-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: 'Oswald', sans-serif;
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 5px;
+    border: 1px solid;
+  }
+
+  .tag-ind { border-color: var(--accent); color: var(--accent); }
+  .tag-coord { border-color: var(--amber); color: var(--amber); }
+  .tag-concealed { border-color: var(--green); color: var(--green); }
+  .tag-hg { border-color: var(--red-bright); color: var(--red-bright); }
+
+  .add-btn {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    background: var(--red);
+    border: none;
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .add-btn:hover { background: var(--red-bright); }
+
+  /* RIGHT: ROSTER */
+  .roster-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .roster-header {
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .roster-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .roster-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .action-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .action-btn:hover { border-color: var(--red-dim); color: var(--text); }
+  .action-btn.danger:hover { border-color: var(--red); background: var(--red-dim); color: #fff; }
+  .action-btn.primary { background: var(--red); border-color: var(--red); color: #fff; }
+  .action-btn.primary:hover { background: var(--red-bright); }
+
+  .roster-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+  }
+
+  .roster-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-faint);
+    gap: 10px;
+  }
+
+  .roster-empty-icon {
+    font-size: 48px;
+    opacity: 0.3;
+  }
+
+  .roster-empty-text {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* ROSTER UNIT ENTRY */
+  .roster-entry {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--red-dim);
+    margin-bottom: 10px;
+    overflow: hidden;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .roster-entry.type-street-thug { border-left-color: #555; }
+  .roster-entry.type-militia { border-left-color: var(--amber); }
+  .roster-entry.type-trained { border-left-color: var(--accent); }
+  .roster-entry.type-hired-gun { border-left-color: var(--red-bright); }
+  .roster-entry.type-named-hg { border-left-color: #c471ed; }
+
+  .entry-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--panel2);
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .entry-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--text-faint);
+    min-width: 24px;
+  }
+
+  .entry-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex: 1;
+  }
+
+  .entry-type-badge {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+  }
+
+  .entry-fop {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--red-bright);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  .entry-fop small {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 1px;
+  }
+
+  .remove-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    transition: color 0.15s;
+    line-height: 1;
+  }
+
+  .remove-btn:hover { color: var(--red-bright); }
+
+  .entry-body {
+    padding: 10px 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .entry-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+
+  .stat-box {
+    text-align: center;
+    background: #0f0f12;
+    padding: 6px 4px;
+    border: 1px solid var(--border);
+  }
+
+  .stat-box-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    display: block;
+    margin-bottom: 2px;
+    white-space: nowrap;
+  }
+
+  .stat-box-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .entry-config {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .config-section-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 3px;
+  }
+
+  .config-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .config-select {
+    background: #0f0f12;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 12px;
+    padding: 4px 6px;
+    flex: 1;
+    min-width: 0;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .config-select:focus { border-color: var(--red-dim); }
+
+  .model-count-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .model-count-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+  }
+
+  .counter-btn {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 22px;
+    height: 22px;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+  }
+
+  .counter-btn:hover { background: var(--red); border-color: var(--red); color: #fff; }
+
+  .model-count-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .entry-upgrades {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  .upgrade-toggle {
+    background: #0f0f12;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .upgrade-toggle:hover { border-color: var(--red-dim); }
+  .upgrade-toggle.active { background: var(--red-dim); border-color: var(--red); color: var(--text); }
+
+  .upgrade-cost { color: var(--amber); margin-left: 4px; }
+
+  /* WEAPON PROFILE TOOLTIP */
+  .weapon-profile-row {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    padding: 3px 6px;
+    background: #0a0a0d;
+    border-left: 2px solid var(--border);
+  }
+
+  .weapon-profile-row .wp-name { color: var(--text); font-weight: 700; }
+  .weapon-profile-row .wp-dmg { color: var(--amber); }
+  .weapon-profile-row .wp-mode { color: var(--accent); font-size: 10px; }
+  .weapon-profile-row .wp-range { font-size: 10px; }
+
+  /* VALIDATION ALERTS */
+  .roster-footer {
+    border-top: 1px solid var(--border);
+    background: var(--panel2);
+    padding: 10px 16px;
+  }
+
+  .alerts {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .alert {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-left: 3px solid;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .alert-warn { border-color: var(--amber); color: var(--amber); background: rgba(212,160,23,0.08); }
+  .alert-ok { border-color: var(--green); color: var(--green); background: rgba(39,174,96,0.08); }
+  .alert-error { border-color: var(--red-bright); color: var(--red-bright); background: rgba(231,76,60,0.08); }
+
+  .footer-summary {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .summary-stat {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .summary-stat-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .summary-stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--red-dim); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+  }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--red);
+    width: 560px;
+    max-width: 95vw;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 20px;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .modal-close:hover { color: var(--red-bright); }
+
+  .modal-body {
+    padding: 16px 20px;
+  }
+
+  .modal-section {
+    margin-bottom: 16px;
+  }
+
+  .modal-section-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--red);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+  }
+
+  .modal-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .modal-stat {
+    text-align: center;
+    background: #0f0f12;
+    border: 1px solid var(--border);
+    padding: 6px 4px;
+  }
+
+  .modal-stat label {
+    display: block;
+    font-family: 'Oswald', sans-serif;
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 2px;
+  }
+
+  .modal-stat span {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--text);
+  }
+
+  .modal-rules-text {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    background: #0f0f12;
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+  }
+
+  .weapon-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  .weapon-table th {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .weapon-table td {
+    padding: 5px 6px;
+    border-bottom: 1px solid #1a1a1f;
+    color: var(--text-dim);
+    vertical-align: top;
+  }
+
+  .weapon-table tr:hover td { background: #1a1a20; }
+
+  .wt-name { color: var(--text); font-weight: 700; }
+  .wt-dmg { color: var(--amber); }
+  .wt-mode { color: var(--accent); font-size: 10px; }
+
+
+  /* EQUIP MODE TOGGLE */
+  .equip-mode-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .equip-mode-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .equip-mode-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .equip-mode-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+  .equip-mode-btn:hover:not(.active) { border-color: var(--red-dim); color: var(--text); }
+
+  .model-weapon-row {
+    background: #0a0a0d;
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--text-faint);
+    padding: 6px 8px;
+    margin-bottom: 5px;
+  }
+
+  .model-weapon-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+  }
+
+  /* FORMATION TOGGLE */
+  .formation-toggle {
+    display: flex;
+    gap: 2px;
+  }
+
+  .form-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .form-btn:hover { border-color: var(--red-dim); color: var(--text-dim); }
+  .form-btn.active-ind { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .form-btn.active-coord { background: var(--amber); border-color: var(--amber); color: #000; }
+
+  .formation-fixed {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid;
+  }
+
+  .ind-only { border-color: var(--accent); color: var(--accent); }
+  .coord-only { border-color: var(--amber); color: var(--amber); }
+
+
+  /* TABS */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    height: 40px;
+  }
+
+  .tab-btn:hover { border-color: var(--red-dim); color: var(--text); }
+  .tab-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+
+  /* TACTICAL GEAR SELECTOR */
+  .b-gear-section {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+  }
+
+  .b-gear-slot-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .b-slot-pips {
+    display: flex;
+    gap: 4px;
+  }
+
+  .b-slot-pip {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border);
+    background: #0a0a0d;
+    border-radius: 2px;
+    transition: background 0.15s;
+  }
+
+  .b-slot-pip.used { background: var(--red); border-color: var(--red-bright); }
+  .b-slot-pip.over { background: var(--red-bright); border-color: #ff6b6b; }
+
+  .b-slot-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .b-slot-count {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    margin-left: auto;
+  }
+
+  .b-slot-count.ok { color: var(--green); }
+  .b-slot-count.warn { color: var(--amber); }
+  .b-slot-count.over { color: var(--red-bright); }
+
+  .b-gear-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .b-gear-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    background: #0f0f12;
+    border: 1px solid var(--border);
+    padding: 5px 7px;
+    cursor: pointer;
+    transition: all 0.12s;
+    position: relative;
+  }
+
+  .b-gear-item:hover { border-color: var(--red-dim); background: #17171e; }
+
+  .b-gear-item.selected {
+    border-color: var(--red);
+    background: var(--red-dim);
+  }
+
+  .b-gear-item.ce-item { border-left: 2px solid var(--amber); }
+  .b-gear-item.selected.ce-item { border-color: var(--amber); background: rgba(212,160,23,0.12); }
+
+  .b-gear-check {
+    font-size: 11px;
+    color: var(--red-bright);
+    min-width: 12px;
+    margin-top: 1px;
+  }
+
+  .b-gear-info { flex: 1; min-width: 0; }
+
+  .b-gear-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+
+  .b-gear-slots-badge {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+
+  .b-gear-slots-badge.two { border-color: var(--amber); color: var(--amber); }
+
+  .b-gear-ce-badge {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+
+  .b-gear-effect {
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.4;
+    margin-top: 2px;
+  }
+
+  .b-gear-selected-list {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .b-gear-tag {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border: 1px solid var(--red-dim);
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .b-gear-tag:hover { border-color: var(--red-bright); color: var(--red-bright); }
+  .b-gear-tag .remove-x { color: var(--text-faint); font-size: 11px; }
+
+  /* BREACHER SHEET */
+  .breacher-sheet-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .b-section-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--red);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+  }
+
+  .b-name-row {
+    display: flex;
+    gap: 10px;
+    padding: 10px 16px 0;
+    align-items: center;
+  }
+
+  .b-name-input {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-bottom: 2px solid var(--red);
+    color: var(--text);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    padding: 4px 10px;
+    flex: 1;
+    outline: none;
+    min-width: 0;
+  }
+
+  .b-name-input:focus { border-bottom-color: var(--red-bright); }
+
+  .b-specialty-badge {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border: 1px solid var(--red);
+    color: var(--red-bright);
+    white-space: nowrap;
+  }
+
+  .b-agency-badge {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .b-stats-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .b-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #0f0f12;
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+  }
+
+  .b-stat-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .b-stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--text);
+    min-width: 32px;
+    text-align: right;
+  }
+
+  .b-stat-val.highlight { color: var(--accent); }
+
+  .b-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .b-loadout-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+  }
+
+  .b-loadout-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .b-loadout-btn {
+    background: #0f0f12;
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    line-height: 1.6;
+  }
+
+  .b-loadout-btn:hover { border-color: var(--red-dim); }
+  .b-loadout-btn.selected { border-color: var(--red); background: var(--red-dim); color: var(--text); }
+
+  .b-loadout-detail {
+    font-size: 11px;
+    color: var(--text);
+    background: #0a0a0d;
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    line-height: 1.7;
+  }
+
+  .b-loadout-detail strong { color: var(--amber); }
+
+  .b-weapons-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+  }
+
+  .b-weapon-row {
+    margin-bottom: 8px;
+  }
+
+  .b-special-rules {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red-dim);
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .b-special-rules p { margin-bottom: 6px; }
+  .b-special-rules strong { color: var(--red-bright); }
+
+  .b-campaign-row {
+    display: flex;
+    gap: 10px;
+    padding: 0 16px 10px;
+    flex-wrap: wrap;
+  }
+
+  .b-campaign-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .b-campaign-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .b-campaign-input {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    padding: 3px 8px;
+    width: 80px;
+    text-align: center;
+    outline: none;
+  }
+
+  .b-campaign-input:focus { border-color: var(--red-dim); }
+
+  .b-injuries-input {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 12px;
+    padding: 4px 8px;
+    width: 220px;
+    outline: none;
+    flex: 1;
+  }
+
+  /* Specialty library cards */
+  .spec-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red-dim);
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .spec-card:hover { border-left-color: var(--red); background: #1e1e26; }
+  .spec-card.selected { border-left-color: var(--red-bright); background: #1e1518; }
+
+  .spec-card-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .spec-card-ce {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    color: var(--accent);
+  }
+
+  .spec-card-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .b-sub-agency-select {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 5px 8px;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+
+  /* GRENADE SELECTOR */
+  .b-grenade-section {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+  }
+
+  .b-grenade-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .b-grenade-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #0f0f12;
+    border: 1px solid var(--border);
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .b-grenade-item:hover { border-color: var(--red-dim); background: #17171e; }
+  .b-grenade-item.selected { border-color: var(--red); background: var(--red-dim); }
+
+  .b-grenade-check { font-size: 11px; color: var(--red-bright); min-width: 12px; margin-top: 1px; }
+
+  .b-grenade-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+  }
+
+  .b-grenade-badge {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 0 4px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .b-grenade-badge.two { border-color: var(--amber); color: var(--amber); }
+
+  .b-grenade-stats {
+    font-size: 10px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .b-grenade-slot-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  /* Print roster button */
+  @media print {
+    header, .sidebar, .roster-footer .action-btn { display: none; }
+    .app { display: block; }
+    .roster-panel { height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">BREACHER <span>//</span> FORCE BUILDER</div>
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="breacher">⚡ Breacher</button>
+    <button class="tab-btn" data-tab="opfor">☠ OPFOR</button>
+  </div>
+  <div class="fop-counter" id="opfor-header-controls" style="display:none;">
+    <div class="fop-budget-wrap">
+      <div class="budget-input-wrap">
+        <span class="budget-label">Budget</span>
+        <input type="number" id="budget-input" value="20" min="1" max="99">
+        <span class="budget-label">FOP</span>
+      </div>
+      <div style="text-align:right;">
+        <span class="remaining-label">Remaining: </span>
+        <span class="remaining-val ok" id="remaining-val">20</span>
+        <span class="remaining-label"> FOP</span>
+      </div>
+    </div>
+    <div>
+      <div class="fop-label">Total Spent</div>
+      <div class="fop-display" id="total-fop">0</div>
+    </div>
+  </div>
+  <div class="fop-counter" id="breacher-header-controls">
+    <div>
+      <div class="fop-label">Combat Effectiveness</div>
+      <div class="fop-display" id="ce-display" style="color:var(--accent);">10</div>
+    </div>
+  </div>
+</header>
+
+<!-- BREACHER TAB -->
+<div class="app" id="tab-breacher">
+
+  <!-- BREACHER LEFT: Specialty selector -->
+  <aside class="sidebar" id="breacher-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">Specialty Selection</div>
+      <div class="filter-tabs" id="specialty-filter-tabs">
+        <button class="filter-tab active" data-spec-filter="all">All</button>
+        <button class="filter-tab" data-spec-filter="Assault">Assault</button>
+        <button class="filter-tab" data-spec-filter="Covert">Covert</button>
+        <button class="filter-tab" data-spec-filter="Heavy Assault">Heavy</button>
+        <button class="filter-tab" data-spec-filter="Marksman">Marksman</button>
+        <button class="filter-tab" data-spec-filter="Hand to Hand">H2H</button>
+      </div>
+    </div>
+    <div class="unit-list" id="specialty-library"></div>
+  </aside>
+
+  <!-- BREACHER RIGHT: Sheet -->
+  <div class="roster-panel" id="breacher-sheet-panel">
+    <div class="roster-header">
+      <div class="roster-title">Breacher Sheet</div>
+      <div class="roster-actions">
+        <button class="action-btn primary" onclick="exportBreacher()">Print</button>
+        <button class="action-btn" onclick="saveBreacher()">💾 Save</button>
+        <button class="action-btn" onclick="loadBreacherTrigger()">📂 Load</button>
+        <button class="action-btn danger" onclick="resetBreacher()">Reset</button>
+      </div>
+      <input type="file" id="breacher-load-input" accept=".json" style="display:none;" onchange="loadBreacher(this)">
+    </div>
+    <div class="roster-list" id="breacher-sheet">
+      <div class="breacher-empty" id="breacher-empty">
+        <div class="roster-empty-icon" style="font-size:48px;opacity:0.3;">⚡</div>
+        <div class="roster-empty-text" style="font-family:Oswald,sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--text-faint);">Select a Specialty</div>
+      </div>
+    </div>
+    <div class="roster-footer">
+      <div class="alerts" id="breacher-alerts"></div>
+      <div class="footer-summary" id="breacher-summary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- OPFOR TAB -->
+<div class="app" id="tab-opfor" style="display:none;">
+  <!-- LEFT SIDEBAR: UNIT LIBRARY -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">Unit Library — Click to Add</div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">All</button>
+        <button class="filter-tab" data-filter="street-thug">Street Thug</button>
+        <button class="filter-tab" data-filter="militia">Militia</button>
+        <button class="filter-tab" data-filter="trained">Trained</button>
+        <button class="filter-tab" data-filter="hired-gun">Hired Gun</button>
+        <button class="filter-tab" data-filter="named-hg">Named HG</button>
+      </div>
+    </div>
+    <div class="unit-list" id="unit-library"></div>
+  </aside>
+
+  <!-- RIGHT: ROSTER -->
+  <div class="roster-panel">
+    <div class="roster-header">
+      <div class="roster-title">Active Roster</div>
+      <div class="roster-actions">
+        <button class="action-btn" onclick="showPrintView()">Print</button>
+        <button class="action-btn" onclick="saveRoster()">💾 Save</button>
+        <button class="action-btn" onclick="loadRosterTrigger()">📂 Load</button>
+        <button class="action-btn danger" onclick="clearRoster()">Clear All</button>
+      </div>
+      <input type="file" id="roster-load-input" accept=".json" style="display:none;" onchange="loadRoster(this)">
+    </div>
+    <div class="roster-list" id="roster-list">
+      <div class="roster-empty" id="roster-empty">
+        <div class="roster-empty-icon">⚔</div>
+        <div class="roster-empty-text">No units deployed</div>
+        <div style="color:var(--text-faint);font-size:12px;">Select units from the library</div>
+      </div>
+    </div>
+    <div class="roster-footer">
+      <div class="alerts" id="alerts"></div>
+      <div class="footer-summary" id="footer-summary"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end tab-opfor -->
+
+<!-- UNIT INFO MODAL -->
+<div class="modal-overlay" id="modal-overlay" style="display:none;" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Unit Name</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+const WEAPONS = {
+  // Primary — Long Range
+  'Bolt Action Sniper (Hvy)':   { type:'primary', damage:'1D10 [DEV][T][SH+2]', modes:'[PS]',           short:'1-12" -2',  medium:'12-24" +0', long:'24+" +2',    category:'Long',      ce:1 },
+  'Semi-Auto Sniper (Med)':     { type:'primary', damage:'1D8 [DEV][T][SH+1]',  modes:'[SA2]',          short:'1-12" -1',  medium:'12-24" +1', long:'24+" +1',    category:'Long',      ce:1 },
+  'DMR (Med)':                  { type:'primary', damage:'1D8 [T][SH+1]',        modes:'[PS][SA2][B]',   short:'1-12" -2',  medium:'12-24" +2', long:'24+" -2',    category:'Long',      ce:0 },
+  // Primary — Medium Range
+  'Assault Rifle (Med)':        { type:'primary', damage:'1D6+1',                modes:'[SA3][A][PS]',   short:'1-12" +1',  medium:'12-24" +0', long:'24-30" -1',  category:'Med',       ce:0 },
+  'Assault Rifle (Hvy)':        { type:'primary', damage:'1D8+1',                modes:'[SA2][A][PS]',   short:'1-12" +0',  medium:'12-24" +1', long:'24-30" -1',  category:'Med',       ce:0 },
+  // Primary — Short/Medium Range
+  'SMG (Light)':                { type:'primary', damage:'1D6',                  modes:'[SA2][B][A]',    short:'1-8" +2',   medium:'8-18" -1',  long:'18-22" -2',  category:'Short/Med', ce:0 },
+  'SMG (Medium)':               { type:'primary', damage:'1D6+1',                modes:'[PS][B][A]',     short:'1-8" +1',   medium:'8-20" +0',  long:'20-25" -2',  category:'Short/Med', ce:0 },
+  // Primary — Short Range
+  'PDW (Light)':                { type:'primary', damage:'1D6 [AP Short]',       modes:'[B][A]',         short:'1-6" +2',   medium:'6-15" +1',  long:'15-20" -3',  category:'Short',     ce:0 },
+  'Compact SMG (Light)':        { type:'primary', damage:'1D6',                  modes:'[Ax2]',          short:'1-6" +3',   medium:'6-15" -3',  long:'16-20" -4',  category:'Short',     ce:1 },
+  'Automatic Pistol (Light)':   { type:'primary', damage:'1D6',                  modes:'[SA2][A]',       short:'1-4" +2',   medium:'4-10" -3',  long:'10-15" -4',  category:'Short',     ce:1 },
+  'Heavy Pistol (Hvy)':         { type:'primary', damage:'1D6+1 [Dev][SH]',      modes:'[SA1]',          short:'1-4" +2',   medium:'4-12" +0',  long:'12-15" -1',  category:'Short',     ce:0 },
+  'Shotgun (Buckshot)':         { type:'primary', damage:'3D3',                  modes:'[PS]/[SA2]',     short:'1-6" +3',   medium:'6-15" -1',  long:'15-20" -3',  category:'Short',     ce:0 },
+  'Shotgun (Slug)':             { type:'primary', damage:'1D8 [DEV]',            modes:'[PS]/[SA2]',     short:'1-8" +1',   medium:'8-15" +0',  long:'15-20" -2',  category:'Short',     ce:0 },
+  'Shotgun (Flechette)':        { type:'primary', damage:'1D6 [AP][T]',          modes:'[PS]/[SA2]',     short:'1-6" +3',   medium:'6-15" -2',  long:'15-20" -5',  category:'Short',     ce:0 },
+  'Sawed-Off (Buckshot)':       { type:'primary', damage:'3D3 +Low Ammo',        modes:'[PS]/[SA2]',     short:'1-6" +4',   medium:'6-15" -4',  long:'—',          category:'Short',     ce:0 },
+  // Support
+  'LMG (Med)':                  { type:'support', damage:'1D6+2 [SH+1]',         modes:'[A]',            short:'1-12" -1',  medium:'12-24" +0', long:'24-40" -2',  special:'Prone/Bracing: all bands +1',          ce:0 },
+  'LMG PARA':                   { type:'support', damage:'1D6+2 [SH+1]',         modes:'[B][A]',         short:'1-12" +0',  medium:'12-24" -1', long:'24-40" -2',  special:'Prone/Bracing: first 2 bands +1',      ce:0 },
+  'Anti-Material Rifle':        { type:'support', damage:'2D10 [AP][T][SH+4]',   modes:'[PS]',           short:'1-6" -1',   medium:'6-30" +0',  long:'30+" -1',    special:'Must be Prone/Bracing. -1" Move.',     ce:1 },
+  'Carbine w/ Underslung GL':   { type:'support', damage:'1D6+1',                modes:'[PS][A]',        short:'1-12" +1',  medium:'12-20" +0', long:'20-25" +0',  special:'Combined weapon',                      ce:1 },
+  'Grenade Launcher':           { type:'support', damage:'Per grenade',           modes:'[PS]',           short:'1-6" +0',   medium:'6-15" -1',  long:'—',          special:'2 shots; Phosphorus = 2 shots',        ce:0 },
+  // Secondary
+  'Revolver':                   { type:'secondary', damage:'1D6',                modes:'[PS]',           short:'1-4" +2',   medium:'4-10" +0',  long:'—',          special:'No Low Ammo/Ammo Out tokens',          ce:0 },
+  'Semi-Auto Pistol':           { type:'secondary', damage:'1D6',                modes:'[SA2]',          short:'1-4" +1',   medium:'4-10" -1',  long:'—',          special:'No Low Ammo/Ammo Out tokens',          ce:0 },
+  // Melee
+  'Stiletto Style':             { type:'melee', damage:'1D4+1 [AP]',             modes:'Rapid Strikes',                  short:'0-1"', medium:'—', long:'—' },
+  'Chopper Style':              { type:'melee', damage:'1D8 (-1 MC)[T]',         modes:'Rapid Strikes + Heavy Blow',     short:'0-1"', medium:'—', long:'—' },
+  'Cutting Style':              { type:'melee', damage:'1D6+1',                  modes:'Rapid Strikes + Heavy Blow',     short:'0-1"', medium:'—', long:'—' },
+  'Blunt Style':                { type:'melee', damage:'1D8+1 [T]',              modes:'Heavy Blow',                     short:'0-1"', medium:'—', long:'—' },
+  'Fists and Kicks':            { type:'melee', damage:'1D4',                    modes:'Rapid Strikes + Heavy Blow',     short:'0-1"', medium:'—', long:'—' },
+};
+
+const GRENADES = [
+  { id:'smoke',     name:'Defensive Smoke',     slots:1, range:'½ Tech +2"', blast:'BL4"', damage:'—',           duration:'3 Turns',  effect:'Blocks LoS in/out. 4" high cylinder.' },
+  { id:'explosive', name:'Offensive Explosive', slots:1, range:'½ Tech +2"', blast:'BL3"', damage:'3D3',          duration:'Instant',  effect:'Units hit are automatically Shaken.' },
+  { id:'phosphorus',name:'Offensive Phosphorus',slots:2, range:'½ Tech +2"', blast:'BL4"', damage:'1D6 [DEV][AP]',duration:'2 Turns',  effect:'Automatically Shaken. 4" high cylinder cloud.' },
+  { id:'flashbang', name:'Defensive Flashbang', slots:1, range:'Tech +2"',   blast:'BL3"', damage:'1',            duration:'Instant',  effect:'-5 Combat/Technical, -3" Movement until end of next turn. Civilians cannot be taken OOA.' },
+  { id:'stun',      name:'Defensive Stun',      slots:1, range:'½ Tech +2"', blast:'BL3"', damage:'1',            duration:'Instant',  effect:'Hit units cannot activate next Contact! card draw. Civilians cannot be taken OOA.' },
+];
+
+const UNITS = [
+  {
+    id: 'street-thug',
+    name: 'Street Thug',
+    type: 'street-thug',
+    fopPerModel: 1,
+    stats: { MOV:'3"', RC:8, MC:6, TECH:5, WND:4, ARM:0 },
+    individual: false,
+    coordinated: [4, 8],
+    concealed: false,
+    baseSize: 25,
+    notes: 'Up to 50% of available FOP may be spent on Street Thugs.',
+    availableWeapons: {
+      primary: ['Assault Rifle (Med)', 'SMG (Light)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)'],
+      secondary: [],
+      melee: ['Fists and Kicks', 'Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style'],
+    },
+    weaponRule: 'Each model may have one Melee weapon OR one: Pistol / SMG (Light) / Assault Rifle (Med) / Shotgun.',
+    upgrades: [],
+    defaultModels: 4,
+  },
+  {
+    id: 'militia',
+    name: 'Militia',
+    type: 'militia',
+    fopPerModel: 2,
+    stats: { MOV:'4"', RC:9, MC:9, TECH:8, WND:6, ARM:0 },
+    individual: true,
+    coordinated: [2, 5],
+    concealed: false,
+    baseSize: 25,
+    notes: 'Coordinated units of 3+ models may equip 1 model with a support weapon for +1 FOP.',
+    availableWeapons: {
+      primary: ['Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'DMR (Med)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Bolt Action Sniper (Hvy)','Semi-Auto Sniper (Med)'],
+      support: ['LMG (Med)', 'LMG PARA', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+      secondary: ['Revolver', 'Semi-Auto Pistol'],
+      melee: ['Fists and Kicks', 'Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style'],
+    },
+    weaponRule: 'Each model may have 1 Melee weapon + 1 Primary weapon. Coordinated 3+ models: 1 model may take a support weapon for +1 FOP.',
+    upgrades: [
+      { id:'cohesion', label:'Extended Cohesion (2" → 4")', cost: 1, perUnit: true, coordOnly: true },
+    ],
+    defaultModels: 2,
+  },
+  {
+    id: 'trained',
+    name: 'Trained',
+    type: 'trained',
+    fopPerModel: 3,
+    stats: { MOV:'4"', RC:11, MC:10, TECH:10, WND:7, ARM:0 },
+    individual: true,
+    coordinated: [2, 4],
+    concealed: false,
+    baseSize: 25,
+    notes: 'For every 2 models in a Coordinated group, 1 model may be equipped with a Support weapon at +1 FOP.',
+    availableWeapons: {
+      primary: ['Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'PDW (Light)', 'Compact SMG (Light)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)', 'Bolt Action Sniper (Hvy)', 'Semi-Auto Sniper (Med)', 'DMR (Med)'],
+      support: ['LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+      secondary: ['Revolver', 'Semi-Auto Pistol'],
+      melee: ['Fists and Kicks', 'Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style'],
+    },
+    weaponRule: 'Each model: 1 Melee + 1 Primary. Per 2 models in Coordinated: 1 may take a Support weapon at +1 FOP.',
+    upgrades: [
+      { id:'armor2',    label:'+2 Armor',                  cost: 1, perModel: true,  coordOnly: true  },
+      { id:'cohesion',  label:'Extended Cohesion (2" → 4")', cost: 1, perUnit: true,  coordOnly: true  },
+      { id:'concealed', label:'Concealed',                  cost: 2, perModel: true,  indOnly: true    },
+    ],
+    defaultModels: 1,
+  },
+  {
+    id: 'hired-gun',
+    name: 'Hired Gun',
+    type: 'hired-gun',
+    fopPerModel: 6,
+    stats: { MOV:'5"', RC:12, MC:12, TECH:12, WND:12, ARM:1 },
+    individual: true,
+    coordinated: false,
+    concealed: true,
+    baseSize: 32,
+    notes: 'Maximum 1 Hired Gun per Breacher in the Operation. Always Individual.',
+    availableWeapons: {
+      primary: ['Bolt Action Sniper (Hvy)', 'Semi-Auto Sniper (Med)', 'DMR (Med)', 'Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'PDW (Light)', 'Compact SMG (Light)', 'Automatic Pistol (Light)', 'Heavy Pistol (Hvy)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)', 'Sawed-Off (Buckshot)', 'LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+      support: ['LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+      secondary: ['Revolver', 'Semi-Auto Pistol'],
+      melee: ['Fists and Kicks', 'Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style'],
+    },
+    weaponRule: 'Each model: 2 Melee weapons + 1 Secondary + 1 Primary OR 1 Support weapon.',
+    upgrades: [
+      { id:'armor3',    label:'+1 Armor (→3)', cost: 2, perUnit: true },
+      { id:'concealed', label:'Concealed',      cost: 2, perUnit: true },
+    ],
+    defaultModels: 1,
+  },
+];
+
+// Premade Hired Guns
+const PREMADE_HG = [
+  {
+    id: 'anita',
+    name: 'Anita',
+    defaultWeapons: { primary: 'Assault Rifle (Med)', secondary: 'Semi-Auto Pistol', melee: 'Blunt Style', melee2: 'Cutting Style' },
+    type: 'named-hg',
+    fopPerModel: 6,
+    stats: { MOV:'5"', RC:12, MC:12, TECH:12, WND:11, ARM:1 },
+    individual: true,
+    coordinated: false,
+    concealed: false,
+    baseSize: 32,
+    notes: 'Premade Hired Gun. When a Unit in the same OPFOR would become Shaken, roll D6 — 4+ negates. When Anita is on the table and OPFOR wins Initiative, gain +1 Momentum.',
+    availableWeapons: {
+      primary: ['Bolt Action Sniper (Hvy)', 'Semi-Auto Sniper (Med)', 'DMR (Med)', 'Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'PDW (Light)', 'Compact SMG (Light)', 'Automatic Pistol (Light)', 'Heavy Pistol (Hvy)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)', 'Sawed-Off (Buckshot)', 'LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+      secondary: ['Revolver', 'Semi-Auto Pistol'],
+      melee: ['Fists and Kicks', 'Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style'],
+    },
+    weaponRule: '2 Melee weapons + 1 Secondary + 1 Primary.',
+    upgrades: [],
+    defaultModels: 1,
+    premade: true,
+  },
+  {
+    id: 'cyclone',
+    name: 'Cyclone',
+    defaultWeapons: { primary: 'Compact SMG (Light)', secondary: 'Revolver', melee: 'Chopper Style', melee2: 'Fists and Kicks' },
+    type: 'named-hg',
+    fopPerModel: 10,
+    stats: { MOV:'5"', RC:12, MC:12, TECH:12, WND:10, ARM:3 },
+    individual: true,
+    coordinated: false,
+    concealed: true,
+    baseSize: 32,
+    notes: 'Premade Hired Gun. Street Thugs in same OPFOR have 4" cohesion. Counts as having Akimbo Tactical Gear.',
+    availableWeapons: {
+      primary: ['Bolt Action Sniper (Hvy)', 'Semi-Auto Sniper (Med)', 'DMR (Med)', 'Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'PDW (Light)', 'Compact SMG (Light)', 'Automatic Pistol (Light)', 'Heavy Pistol (Hvy)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)', 'Sawed-Off (Buckshot)', 'LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+      secondary: ['Revolver', 'Semi-Auto Pistol'],
+      melee: ['Fists and Kicks', 'Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style'],
+    },
+    weaponRule: '2 Melee weapons + 1 Secondary + 1 Primary.',
+    upgrades: [],
+    defaultModels: 1,
+    premade: true,
+  },
+  {
+    id: 'turbo',
+    name: 'Turbo',
+    defaultWeapons: { primary: 'Semi-Auto Sniper (Med)', secondary: 'Revolver', melee: 'Blunt Style', melee2: 'Stiletto Style' },
+    type: 'named-hg',
+    fopPerModel: 10,
+    stats: { MOV:'5"', RC:12, MC:12, TECH:12, WND:10, ARM:3 },
+    individual: true,
+    coordinated: false,
+    concealed: true,
+    baseSize: 32,
+    notes: 'Premade Hired Gun. Trained Units in same OPFOR gain +1 Ranged Combat.',
+    availableWeapons: {
+      primary: ['Bolt Action Sniper (Hvy)', 'Semi-Auto Sniper (Med)', 'DMR (Med)', 'Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'PDW (Light)', 'Compact SMG (Light)', 'Automatic Pistol (Light)', 'Heavy Pistol (Hvy)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)', 'Sawed-Off (Buckshot)', 'LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+      secondary: ['Revolver', 'Semi-Auto Pistol'],
+      melee: ['Fists and Kicks', 'Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style'],
+    },
+    weaponRule: '2 Melee weapons + 1 Secondary + 1 Primary.',
+    upgrades: [],
+    defaultModels: 1,
+    premade: true,
+  },
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let roster = [];
+let nextId = 1;
+let activeFilter = 'all';
+let budget = 20;
+
+// ============================================================
+// RENDER UNIT LIBRARY
+// ============================================================
+function renderLibrary() {
+  const container = document.getElementById('unit-library');
+  const allUnits = [...UNITS, ...PREMADE_HG];
+  const filtered = activeFilter === 'all' ? allUnits : allUnits.filter(u => u.type === activeFilter);
+
+  container.innerHTML = '';
+  filtered.forEach(unit => {
+    const card = document.createElement('div');
+    card.className = `unit-card type-${unit.type}`;
+
+    const indTag = unit.individual ? '<span class="tag tag-ind">IND</span>' : '';
+    const coordTag = unit.coordinated ? `<span class="tag tag-coord">COORD [${unit.coordinated[0]}/${unit.coordinated[1]}]</span>` : '';
+    const concTag = unit.concealed ? '<span class="tag tag-concealed">CONCEALED</span>' : '';
+    const hgTag = unit.type === 'named-hg' ? '<span class="tag tag-hg">NAMED HG</span>' : '';
+
+    const fopText = unit.premade
+      ? `${unit.fopPerModel} <small>FOP</small>`
+      : `${unit.fopPerModel} <small>FOP/MODEL</small>`;
+
+    card.innerHTML = `
+      <div class="unit-card-top">
+        <div class="unit-name">${unit.name}</div>
+        <div class="unit-fop-badge">${fopText}</div>
+      </div>
+      <div class="unit-stats-mini">
+        <div class="stat-pill"><span class="stat-pill-label">MOV</span><span class="stat-pill-val">${unit.stats.MOV}</span></div>
+        <div class="stat-pill"><span class="stat-pill-label">RC</span><span class="stat-pill-val">${unit.stats.RC}</span></div>
+        <div class="stat-pill"><span class="stat-pill-label">MC</span><span class="stat-pill-val">${unit.stats.MC}</span></div>
+        <div class="stat-pill"><span class="stat-pill-label">TECH</span><span class="stat-pill-val">${unit.stats.TECH}</span></div>
+        <div class="stat-pill"><span class="stat-pill-label">WND</span><span class="stat-pill-val">${unit.stats.WND}</span></div>
+        <div class="stat-pill"><span class="stat-pill-label">ARM</span><span class="stat-pill-val">${unit.stats.ARM}</span></div>
+      </div>
+      <div class="unit-tags">${indTag}${coordTag}${concTag}${hgTag}</div>
+      <button class="add-btn" onclick="addUnit('${unit.id}');event.stopPropagation();">+ ADD</button>
+    `;
+
+    card.addEventListener('click', () => showUnitInfo(unit));
+    container.appendChild(card);
+  });
+}
+
+// ============================================================
+// ADD / REMOVE UNIT
+// ============================================================
+function addUnit(unitId) {
+  const allUnits = [...UNITS, ...PREMADE_HG];
+  const template = allUnits.find(u => u.id === unitId);
+  if (!template) return;
+
+  // Street Thug 50% FOP cap — block adding if minimum cost already exceeds cap
+  if (template.id === 'street-thug') {
+    const minCost = template.fopPerModel * (template.coordinated ? template.coordinated[0] : 1);
+    const alreadySpent = streetThugFOPUsed(-1); // -1 = exclude nothing (no existing entry yet)
+    if (alreadySpent + minCost > budget * 0.5) {
+      // Flash alert instead of silently ignoring
+      const alertsEl = document.getElementById('alerts');
+      const prev = alertsEl.innerHTML;
+      alertsEl.innerHTML = `<div class="alert alert-error">Street Thugs are at the 50% FOP cap (${Math.floor(budget*0.5)} FOP max). Cannot add more.</div>`;
+      setTimeout(() => { alertsEl.innerHTML = prev; }, 3000);
+      return;
+    }
+  }
+
+  // Determine default formation
+  // Street Thug: coord only. Hired Gun: ind only. Militia/Trained: both — default to coordinated.
+  const defaultFormation = (!template.individual) ? 'coordinated'
+    : (!template.coordinated) ? 'individual'
+    : 'coordinated';
+
+  const defaultModels = defaultFormation === 'coordinated' && template.coordinated
+    ? template.coordinated[0]
+    : 1;
+
+  const entry = {
+    uid: nextId++,
+    templateId: unitId,
+    template: template,
+    formation: defaultFormation,
+    models: defaultModels,
+    selectedPrimary: template.defaultWeapons?.primary ?? null,
+    selectedSecondary: template.defaultWeapons?.secondary ?? null,
+    selectedMelee: template.defaultWeapons?.melee ?? template.availableWeapons.melee?.[0] ?? null,
+    selectedMelee2: template.defaultWeapons?.melee2 ?? ((template.type === 'hired-gun' || template.type === 'named-hg') ? 'Fists and Kicks' : null),
+    selectedSupport: null,
+    activeUpgrades: {},
+    equipMode: 'all',      // 'all' or 'individual'
+    modelWeapons: [],      // array of per-model weapon objects when equipMode === 'individual'
+  };
+
+  roster.push(entry);
+  renderRoster();
+  updateFOP();
+}
+
+
+// ============================================================
+// EQUIP MODE (per-model weapons for coordinated OPFOR units)
+// ============================================================
+
+function buildModelWeapons(entry) {
+  // Initialise modelWeapons array to match current model count
+  const t = entry.template;
+  const count = entry.formation === 'individual' ? 1 : entry.models;
+  const existing = entry.modelWeapons || [];
+  const result = [];
+  for (let i = 0; i < count; i++) {
+    result.push({
+      primary:   existing[i]?.primary   ?? entry.selectedPrimary   ?? null,
+      secondary: existing[i]?.secondary ?? entry.selectedSecondary ?? null,
+      melee:     existing[i]?.melee     ?? entry.selectedMelee     ?? null,
+    });
+  }
+  entry.modelWeapons = result;
+}
+
+function setEquipMode(uid, mode) {
+  const entry = roster.find(e => e.uid === uid);
+  if (!entry) return;
+  entry.equipMode = mode;
+  if (mode === 'individual') buildModelWeapons(entry);
+  renderRoster();
+}
+
+function updateModelWeapon(uid, modelIdx, slot, value) {
+  const entry = roster.find(e => e.uid === uid);
+  if (!entry || !entry.modelWeapons[modelIdx]) return;
+  entry.modelWeapons[modelIdx][slot] = value || null;
+  renderRoster();
+}
+
+function renderEquipAll(entry, uid, t, primaryOpts, meleeOpts, secondaryOpts, supportOpts, isCoord) {
+  const isHG = t.type === 'hired-gun' || t.type === 'named-hg';
+  let html = '';
+  if (primaryOpts) html += `
+    <div>
+      <div class="config-section-label">Primary</div>
+      <div class="config-row">
+        <select class="config-select" onchange="updateWeapon(${uid},'primary',this.value)"><option value="">— None —</option>${primaryOpts}</select>
+      </div>
+      ${entry.selectedPrimary ? renderWeaponProfile(entry.selectedPrimary) : ''}
+    </div>`;
+  if (meleeOpts) html += `
+    <div>
+      <div class="config-section-label">Melee 1</div>
+      <div class="config-row">
+        <select class="config-select" onchange="updateWeapon(${uid},'melee',this.value)">${meleeOpts}</select>
+      </div>
+      ${entry.selectedMelee ? renderWeaponProfile(entry.selectedMelee) : ''}
+    </div>`;
+  if (meleeOpts && isHG) {
+    const melee2Opts = (t.availableWeapons.melee || []).map(w =>
+      `<option value="${w}" ${entry.selectedMelee2===w?'selected':''}>${w}</option>`).join('');
+    html += `
+    <div>
+      <div class="config-section-label">Melee 2</div>
+      <div class="config-row">
+        <select class="config-select" onchange="updateWeapon(${uid},'melee2',this.value)"><option value="">— None —</option>${melee2Opts}</select>
+      </div>
+      ${entry.selectedMelee2 ? renderWeaponProfile(entry.selectedMelee2) : ''}
+    </div>`;
+  }
+  if (secondaryOpts) html += `
+    <div>
+      <div class="config-section-label">Secondary</div>
+      <div class="config-row">
+        <select class="config-select" onchange="updateWeapon(${uid},'secondary',this.value)"><option value="">— None —</option>${secondaryOpts}</select>
+      </div>
+      ${entry.selectedSecondary ? renderWeaponProfile(entry.selectedSecondary) : ''}
+    </div>`;
+  if (supportOpts && !t.premade && (isHG || (isCoord && (t.id !== 'militia' || entry.models >= 3) && (t.id !== 'trained' || entry.models >= 2)))) html += `
+    <div>
+      <div class="config-section-label">Support <span style="color:var(--amber)">(+FOP)</span></div>
+      <div class="config-row">
+        <select class="config-select" onchange="updateWeapon(${uid},'support',this.value)">
+          <option value="">— None —</option>${supportOpts}
+        </select>
+      </div>
+      ${entry.selectedSupport ? renderWeaponProfile(entry.selectedSupport) : ''}
+    </div>`;
+  return html;
+}
+
+function renderEquipIndividual(entry, uid, t, primaryPool, meleePool, secondaryPool) {
+  buildModelWeapons(entry);
+  let html = '';
+  entry.modelWeapons.forEach((mw, idx) => {
+    const pOpts = (primaryPool || []).map(w =>
+      `<option value="${w}" ${mw.primary===w?'selected':''}>${w}</option>`).join('');
+    const mOpts = (meleePool || []).map(w =>
+      `<option value="${w}" ${mw.melee===w?'selected':''}>${w}</option>`).join('');
+    const sOpts = (secondaryPool || []).map(w =>
+      `<option value="${w}" ${mw.secondary===w?'selected':''}>${w}</option>`).join('');
+
+    html += `<div class="model-weapon-row">
+      <div class="model-weapon-label">Model ${idx + 1}</div>`;
+
+    if (pOpts) html += `
+      <div style="margin-bottom:4px;">
+        <div class="config-section-label">Primary</div>
+        <select class="config-select" style="width:100%;" onchange="updateModelWeapon(${uid},${idx},'primary',this.value)">
+          <option value="">— None —</option>${pOpts}
+        </select>
+        ${mw.primary ? renderWeaponProfile(mw.primary) : ''}
+      </div>`;
+
+    if (mOpts) html += `
+      <div style="margin-bottom:4px;">
+        <div class="config-section-label">Melee</div>
+        <select class="config-select" style="width:100%;" onchange="updateModelWeapon(${uid},${idx},'melee',this.value)">
+          ${mOpts}
+        </select>
+        ${mw.melee ? renderWeaponProfile(mw.melee) : ''}
+      </div>`;
+
+    if (sOpts) html += `
+      <div>
+        <div class="config-section-label">Secondary</div>
+        <select class="config-select" style="width:100%;" onchange="updateModelWeapon(${uid},${idx},'secondary',this.value)">
+          <option value="">— None —</option>${sOpts}
+        </select>
+        ${mw.secondary ? renderWeaponProfile(mw.secondary) : ''}
+      </div>`;
+
+    html += `</div>`;
+  });
+  return html;
+}
+
+function removeUnit(uid) {
+  roster = roster.filter(e => e.uid !== uid);
+  renderRoster();
+  updateFOP();
+}
+
+function clearRoster() {
+  if (roster.length === 0) return;
+  if (confirm('Clear the entire roster?')) {
+    roster = [];
+    renderRoster();
+    updateFOP();
+  }
+}
+
+function setFormation(uid, formation) {
+  const entry = roster.find(e => e.uid === uid);
+  if (!entry) return;
+  entry.formation = formation;
+  const t = entry.template;
+  if (formation === 'individual') {
+    entry.models = 1;
+    entry.selectedSupport = null;
+    entry.equipMode = 'all';
+    entry.modelWeapons = [];
+    // Clear any coord-only upgrades
+    (t.upgrades || []).filter(u => u.coordOnly).forEach(u => {
+      entry.activeUpgrades[u.id] = false;
+    });
+  } else {
+    entry.models = t.coordinated ? t.coordinated[0] : 1;
+    // Clear any ind-only upgrades
+    (t.upgrades || []).filter(u => u.indOnly).forEach(u => {
+      entry.activeUpgrades[u.id] = false;
+    });
+  }
+  renderRoster();
+}
+
+// ============================================================
+// CALCULATE FOP
+// ============================================================
+function calcEntryFOP(entry) {
+  const t = entry.template;
+  const models = entry.formation === 'individual' ? 1 : entry.models;
+  let fop = t.fopPerModel * models;
+
+  // Upgrades
+  if (entry.activeUpgrades['cohesion']) fop += 1;
+  if (entry.activeUpgrades['armor2']) fop += 1 * models;
+  if (entry.activeUpgrades['armor3']) fop += 2;
+
+  // Concealed — Trained (IND): +2 FOP per model; Hired Gun: +2 FOP
+  if (entry.activeUpgrades['concealed']) {
+    if (t.id === 'trained') fop += 2 * models;
+    else fop += 2; // Hired Gun flat +2
+  }
+
+  // Support weapon costs +1 FOP
+  // Coordinated units: any selected support weapon
+  // Hired Gun (individual): also +1 FOP
+  if (entry.selectedSupport) {
+    const isHiredGun = t.type === 'hired-gun' || t.type === 'named-hg';
+    if (isHiredGun || entry.formation === 'coordinated') fop += 1;
+  }
+
+  // Hired Gun weapon CE modifier → FOP cost
+  if (t.type === 'hired-gun' || t.type === 'named-hg') {
+    const weaponKeys = [entry.selectedPrimary, entry.selectedSupport, entry.selectedSecondary].filter(Boolean);
+    weaponKeys.forEach(wName => {
+      const w = WEAPONS[wName];
+      if (w && w.ce > 0) fop += w.ce;
+    });
+  }
+
+  return fop;
+}
+
+function updateFOP() {
+  const total = roster.reduce((sum, e) => sum + calcEntryFOP(e), 0);
+  const remaining = budget - total;
+
+  document.getElementById('total-fop').textContent = total;
+  const remEl = document.getElementById('remaining-val');
+  remEl.textContent = remaining;
+  remEl.className = 'remaining-val ' + (remaining < 0 ? 'over' : remaining <= 3 ? 'warn' : 'ok');
+
+  renderAlerts(total, remaining);
+  renderFooterSummary(total);
+}
+
+// ============================================================
+// RENDER ROSTER
+// ============================================================
+function renderRoster() {
+  const container = document.getElementById('roster-list');
+  const emptyEl = document.getElementById('roster-empty');
+
+  if (roster.length === 0) {
+    emptyEl.style.display = 'flex';
+    container.innerHTML = '';
+    container.appendChild(emptyEl);
+    updateFOP();
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+
+  // Rebuild DOM entries
+  const existing = {};
+  container.querySelectorAll('.roster-entry').forEach(el => {
+    existing[el.dataset.uid] = el;
+  });
+
+  // Remove entries not in roster
+  Object.keys(existing).forEach(uid => {
+    if (!roster.find(e => e.uid == uid)) existing[uid].remove();
+  });
+
+  roster.forEach((entry, idx) => {
+    const t = entry.template;
+    const fop = calcEntryFOP(entry);
+    const uid = entry.uid;
+
+    let el = container.querySelector(`.roster-entry[data-uid="${uid}"]`);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = `roster-entry type-${t.type}`;
+      el.dataset.uid = uid;
+      container.appendChild(el);
+    }
+
+    // Build stats HTML
+    const statsHtml = `
+      <div class="stat-box"><span class="stat-box-label">Movement</span><span class="stat-box-val">${t.stats.MOV}</span></div>
+      <div class="stat-box"><span class="stat-box-label">Ranged Combat</span><span class="stat-box-val">${t.stats.RC}</span></div>
+      <div class="stat-box"><span class="stat-box-label">Melee Combat</span><span class="stat-box-val">${t.stats.MC}</span></div>
+      <div class="stat-box"><span class="stat-box-label">Technical</span><span class="stat-box-val">${t.stats.TECH}</span></div>
+      <div class="stat-box"><span class="stat-box-label">Wounds</span><span class="stat-box-val">${t.stats.WND}</span></div>
+      <div class="stat-box"><span class="stat-box-label">Armor</span><span class="stat-box-val">${t.stats.ARM + (entry.activeUpgrades['armor2'] ? 2 : 0) + (entry.activeUpgrades['armor3'] ? 2 : 0)}</span></div>
+    `;
+
+    // Formation toggle (only for units that support both)
+    const canToggleFormation = t.individual && t.coordinated && !t.premade;
+    const isCoord = entry.formation === 'coordinated';
+    const isInd = entry.formation === 'individual';
+
+    let formationHtml = '';
+    if (canToggleFormation) {
+      formationHtml = `
+        <div class="formation-toggle">
+          <button class="form-btn ${isInd ? 'active-ind' : ''}" onclick="setFormation(${uid},'individual')">IND</button>
+          <button class="form-btn ${isCoord ? 'active-coord' : ''}" onclick="setFormation(${uid},'coordinated')">COORD</button>
+        </div>
+      `;
+    } else if (!t.individual && t.coordinated) {
+      formationHtml = `<span class="formation-fixed coord-only">COORD ONLY</span>`;
+    } else if (t.individual && !t.coordinated) {
+      formationHtml = `<span class="formation-fixed ind-only">IND ONLY</span>`;
+    }
+
+    // Model count — clamp based on formation
+    const modelCountHtml = (() => {
+      if (t.premade) return `<div class="model-count-wrap"><span class="model-count-label">Models:</span><span class="model-count-val">1</span></div>`;
+      if (isInd) return `<div class="model-count-wrap"><span class="model-count-label">Models:</span><span class="model-count-val">1</span></div>`;
+      // Coordinated
+      const coordMin = t.coordinated ? t.coordinated[0] : 1;
+      const coordMax = t.coordinated ? t.coordinated[1] : 1;
+      return `
+        <div class="model-count-wrap">
+          <span class="model-count-label">Models (${coordMin}–${coordMax}):</span>
+          <button class="counter-btn" onclick="changeModels(${uid},-1)">−</button>
+          <span class="model-count-val" id="mc-${uid}">${entry.models}</span>
+          <button class="counter-btn" onclick="changeModels(${uid},1)">+</button>
+        </div>
+      `;
+    })();
+
+    // Weapon selects
+    const primaryPool   = t.availableWeapons.primary   || [];
+    const secondaryPool = t.availableWeapons.secondary || [];
+    const meleePool     = t.availableWeapons.melee     || [];
+    const supportPool   = t.availableWeapons.support   || [];
+
+    const primaryOpts   = primaryPool.map(w =>   `<option value="${w}" ${entry.selectedPrimary===w?'selected':''}>${w}</option>`).join('');
+    const secondaryOpts = secondaryPool.map(w => `<option value="${w}" ${entry.selectedSecondary===w?'selected':''}>${w}</option>`).join('');
+    const meleeOpts     = meleePool.map(w =>     `<option value="${w}" ${entry.selectedMelee===w?'selected':''}>${w}</option>`).join('');
+    const supportOpts   = supportPool.map(w =>   `<option value="${w}" ${entry.selectedSupport===w?'selected':''}>${w}</option>`).join('');
+
+    // Equip mode toggle — only for multi-model coordinated units (not Hired Guns or premade)
+    const canEquipIndividual = !t.premade && isCoord && entry.models > 1 &&
+      ['street-thug', 'militia', 'trained'].includes(t.id);
+
+    let equipModeHtml = '';
+    if (canEquipIndividual) {
+      const modeAll = entry.equipMode !== 'individual';
+      equipModeHtml = `<div class="equip-mode-wrap">
+        <span class="equip-mode-label">Equip:</span>
+        <button class="equip-mode-btn ${modeAll ? 'active' : ''}" onclick="setEquipMode(${uid},'all')">All</button>
+        <button class="equip-mode-btn ${!modeAll ? 'active' : ''}" onclick="setEquipMode(${uid},'individual')">Individual</button>
+      </div>`;
+    }
+
+    let weaponHtml = equipModeHtml;
+
+    if (!canEquipIndividual || entry.equipMode !== 'individual') {
+      // Equip All mode (default)
+      weaponHtml += renderEquipAll(entry, uid, t, primaryOpts, meleeOpts, secondaryOpts, supportOpts, isCoord);
+    } else {
+      // Equip Individual mode
+      weaponHtml += renderEquipIndividual(entry, uid, t, primaryPool, meleePool, secondaryPool);
+      // Still show support weapon selector at unit level if applicable
+      if (supportOpts && (isCoord && (t.id !== 'militia' || entry.models >= 3) && (t.id !== 'trained' || entry.models >= 2))) {
+        weaponHtml += `<div style="margin-top:6px;">
+          <div class="config-section-label">Support <span style="color:var(--amber)">(+FOP — unit level)</span></div>
+          <div class="config-row">
+            <select class="config-select" onchange="updateWeapon(${uid},'support',this.value)">
+              <option value="">— None —</option>${supportOpts}
+            </select>
+          </div>
+          ${entry.selectedSupport ? renderWeaponProfile(entry.selectedSupport) : ''}
+        </div>`;
+      }
+    }
+
+    // Upgrades — filter out coordOnly upgrades when unit is Individual
+    let upgradeHtml = '';
+    const visibleUpgrades = (t.upgrades || []).filter(upg => {
+      if (upg.coordOnly && !isCoord) return false;
+      if (upg.indOnly  && !isInd)   return false;
+      return true;
+    });
+    if (visibleUpgrades.length > 0) {
+      upgradeHtml = `<div class="entry-upgrades">`;
+      visibleUpgrades.forEach(upg => {
+        const isActive = !!entry.activeUpgrades[upg.id];
+        const costLabel = upg.cost > 0 ? `+${upg.cost} FOP` : '';
+        upgradeHtml += `<button class="upgrade-toggle ${isActive?'active':''}" onclick="toggleUpgrade(${uid},'${upg.id}')">
+          ${upg.label}${costLabel ? ` <span class="upgrade-cost">${costLabel}</span>` : ''}
+        </button>`;
+      });
+      upgradeHtml += `</div>`;
+    }
+
+    // CE weapon cost badge for Hired Guns
+    let ceFopBadge = '';
+    if (t.type === 'hired-gun' || t.type === 'named-hg') {
+      const weaponKeys = [entry.selectedPrimary, entry.selectedSupport, entry.selectedSecondary].filter(Boolean);
+      const totalCE = weaponKeys.reduce((sum, wName) => {
+        const w = WEAPONS[wName];
+        return sum + (w && w.ce > 0 ? w.ce : 0);
+      }, 0);
+      if (totalCE > 0) {
+        ceFopBadge = `<span style="font-family:Oswald,sans-serif;font-size:9px;letter-spacing:1px;color:var(--amber);border:1px solid var(--amber);padding:2px 5px;">+${totalCE} FOP (weapon CE)</span>`;
+      }
+    }
+
+    el.innerHTML = `
+      <div class="entry-header">
+        <span class="entry-num">${idx+1}</span>
+        <span class="entry-name">${t.name}</span>
+        ${formationHtml}
+        ${modelCountHtml}
+        ${ceFopBadge}
+        <div class="entry-fop">${fop}<small> FOP</small></div>
+        <button class="remove-btn" onclick="removeUnit(${uid})" title="Remove">✕</button>
+      </div>
+      <div class="entry-body">
+        <div class="entry-stats">${statsHtml}</div>
+        <div class="entry-config">${weaponHtml}</div>
+        ${upgradeHtml}
+      </div>
+    `;
+  });
+
+  updateFOP();
+}
+
+function renderWeaponProfile(weaponName) {
+  const w = WEAPONS[weaponName];
+  if (!w) return '';
+  const ceBadge = w.ce ? `<span style="font-family:Oswald,sans-serif;font-size:9px;letter-spacing:1px;color:var(--amber);border:1px solid var(--amber);padding:0 3px;margin-left:4px;">+${w.ce} CE</span>` : '';
+  if (w.type === 'melee') {
+    return `<div class="weapon-profile-row">
+      <span class="wp-mode">${w.modes}</span> &nbsp;
+      <span class="wp-dmg">${w.damage}</span> &nbsp;
+      <span class="wp-range">Range: ${w.short}</span>${ceBadge}
+    </div>`;
+  }
+  if (w.type === 'support') {
+    const special = w.special ? ` &nbsp;<span style="font-size:10px;color:var(--text-dim);">${w.special}</span>` : '';
+    return `<div class="weapon-profile-row">
+      <span class="wp-mode">${w.modes}</span> &nbsp;
+      <span class="wp-dmg">${w.damage}</span> &nbsp;
+      <span class="wp-range">S:${w.short} M:${w.medium} L:${w.long}</span>${special}${ceBadge}
+    </div>`;
+  }
+  const catBadge = w.category ? `<span style="font-family:Oswald,sans-serif;font-size:9px;letter-spacing:1px;color:var(--text-dim);border:1px solid var(--border);padding:0 3px;margin-left:4px;">${w.category}</span>` : '';
+  return `<div class="weapon-profile-row">
+    <span class="wp-mode">${w.modes}</span> &nbsp;
+    <span class="wp-dmg">${w.damage}</span> &nbsp;
+    <span class="wp-range">S:${w.short} M:${w.medium} L:${w.long}</span>${catBadge}${ceBadge}
+  </div>`;
+}
+
+// ============================================================
+// INTERACTIONS
+// ============================================================
+function streetThugFOPUsed(excludeUid) {
+  return roster
+    .filter(e => e.templateId === 'street-thug' && e.uid !== excludeUid)
+    .reduce((s, e) => s + calcEntryFOP(e), 0);
+}
+
+function streetThugCapReached(entry, newModels) {
+  // Returns true if giving entry newModels models would exceed 50% of budget
+  const template = entry.template;
+  const proposed = template.fopPerModel * newModels;
+  const others = streetThugFOPUsed(entry.uid);
+  return (proposed + others) > budget * 0.5;
+}
+
+function changeModels(uid, delta) {
+  const entry = roster.find(e => e.uid === uid);
+  if (!entry) return;
+  const t = entry.template;
+  if (entry.formation === 'individual') return;
+  const min = t.coordinated ? t.coordinated[0] : 1;
+  const max = t.coordinated ? t.coordinated[1] : 1;
+  const newModels = Math.max(min, Math.min(max, entry.models + delta));
+
+  // Enforce Street Thug 50% cap when adding models
+  if (t.id === 'street-thug' && delta > 0 && streetThugCapReached(entry, newModels)) {
+    renderAlerts(roster.reduce((s,e) => s + calcEntryFOP(e), 0), budget - roster.reduce((s,e) => s + calcEntryFOP(e), 0));
+    return;
+  }
+
+  entry.models = newModels;
+  if (entry.equipMode === 'individual') buildModelWeapons(entry);
+  renderRoster();
+}
+
+function updateWeapon(uid, slot, value) {
+  const entry = roster.find(e => e.uid === uid);
+  if (!entry) return;
+  if (slot === 'primary') entry.selectedPrimary = value || null;
+  if (slot === 'secondary') entry.selectedSecondary = value || null;
+  if (slot === 'melee') entry.selectedMelee = value;
+  if (slot === 'support') entry.selectedSupport = value || null;
+  renderRoster();
+}
+
+function toggleUpgrade(uid, upgradeId) {
+  const entry = roster.find(e => e.uid === uid);
+  if (!entry) return;
+  entry.activeUpgrades[upgradeId] = !entry.activeUpgrades[upgradeId];
+  renderRoster();
+}
+
+// ============================================================
+// ALERTS
+// ============================================================
+function renderAlerts(total, remaining) {
+  const container = document.getElementById('alerts');
+  const alerts = [];
+
+  // Over budget
+  if (remaining < 0) {
+    alerts.push({ type: 'error', msg: `Over budget by ${Math.abs(remaining)} FOP` });
+  } else if (remaining === 0) {
+    alerts.push({ type: 'ok', msg: 'Budget fully allocated' });
+  }
+
+  // Street Thug 50% cap
+  const streetThugFOP = roster.filter(e => e.templateId === 'street-thug').reduce((s,e) => s + calcEntryFOP(e), 0);
+  if (streetThugFOP > budget * 0.5) {
+    alerts.push({ type: 'error', msg: `Street Thugs exceed 50% FOP cap — ${streetThugFOP} spent / ${Math.floor(budget*0.5)} max` });
+  } else if (streetThugFOP > 0) {
+    alerts.push({ type: 'ok', msg: `Street Thugs: ${streetThugFOP} / ${Math.floor(budget*0.5)} FOP (50% cap)` });
+  }
+
+  // Hired Gun cap (max 1 per Breacher — user sets budget per Breacher)
+  const hgCount = roster.filter(e => e.template.type === 'hired-gun' || e.template.type === 'named-hg').length;
+  if (hgCount > 1) {
+    alerts.push({ type: 'warn', msg: `${hgCount} Hired Guns present — max 1 per Breacher in Operation` });
+  }
+
+  // Concealed budget 25%
+  const concealedFOP = roster.filter(e => e.activeUpgrades['concealed'] || e.template.concealed).reduce((s,e) => s + calcEntryFOP(e), 0);
+  if (concealedFOP > budget * 0.25) {
+    alerts.push({ type: 'warn', msg: `Concealed units exceed 25% of budget (${concealedFOP} / ${Math.floor(budget*0.25)} max)` });
+  }
+
+  container.innerHTML = alerts.map(a =>
+    `<div class="alert alert-${a.type}">${a.msg}</div>`
+  ).join('');
+}
+
+function renderFooterSummary(total) {
+  const units = roster.length;
+  const models = roster.reduce((s,e) => s + e.models, 0);
+  document.getElementById('footer-summary').innerHTML = `
+    <div class="summary-stat"><span class="summary-stat-label">Units</span><span class="summary-stat-val">${units}</span></div>
+    <div class="summary-stat"><span class="summary-stat-label">Models</span><span class="summary-stat-val">${models}</span></div>
+    <div class="summary-stat"><span class="summary-stat-label">Spent</span><span class="summary-stat-val">${total} FOP</span></div>
+    <div class="summary-stat"><span class="summary-stat-label">Budget</span><span class="summary-stat-val">${budget} FOP</span></div>
+  `;
+}
+
+// ============================================================
+// UNIT INFO MODAL
+// ============================================================
+function showUnitInfo(unit) {
+  document.getElementById('modal-title').textContent = unit.name.toUpperCase();
+
+  const statKeys = ['MOV','RC','MC','TECH','WND','ARM'];
+  const statLabels = { MOV:'Move', RC:'Ranged', MC:'Melee', TECH:'Tech', WND:'Wounds', ARM:'Armor' };
+
+  const statsHtml = statKeys.map(k => `
+    <div class="modal-stat">
+      <label>${statLabels[k]}</label>
+      <span>${unit.stats[k]}</span>
+    </div>
+  `).join('');
+
+  // Weapons table
+  let weaponsHtml = `<table class="weapon-table">
+    <tr><th>Weapon</th><th>Type</th><th>Damage</th><th>Short</th><th>Medium</th><th>Long</th></tr>`;
+  const allWpns = [
+    ...(unit.availableWeapons.primary||[]),
+    ...(unit.availableWeapons.support||[]),
+    ...(unit.availableWeapons.secondary||[]),
+    ...(unit.availableWeapons.melee||[]),
+  ];
+  allWpns.forEach(wn => {
+    const w = WEAPONS[wn];
+    if (!w) return;
+    weaponsHtml += `<tr>
+      <td class="wt-name">${wn}</td>
+      <td>${w.type}</td>
+      <td class="wt-dmg">${w.damage}</td>
+      <td>${w.short||'—'}</td>
+      <td>${w.medium||'—'}</td>
+      <td>${w.long||'—'}</td>
+    </tr>`;
+  });
+  weaponsHtml += '</table>';
+
+  const ind = unit.individual ? 'Yes' : 'No';
+  const coord = unit.coordinated ? `Yes [${unit.coordinated[0]}/${unit.coordinated[1]}]` : 'No';
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-section">
+      <div class="modal-section-title">Statistics</div>
+      <div class="modal-stat-grid">${statsHtml}</div>
+      <div style="display:flex;gap:16px;font-size:11px;color:var(--text-dim);margin-top:8px;">
+        <span>Individual: <b>${ind}</b></span>
+        <span>Coordinated: <b>${coord}</b></span>
+        <span>Concealed: <b>${unit.concealed?'Yes':'No'}</b></span>
+        <span>Base: <b>${unit.baseSize}mm</b></span>
+        <span>FOP: <b>${unit.fopPerModel}/model</b></span>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Weapons & Equipment</div>
+      <div class="modal-rules-text" style="margin-bottom:8px;">${unit.weaponRule}</div>
+      ${weaponsHtml}
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Notes</div>
+      <div class="modal-rules-text">${unit.notes}</div>
+    </div>
+  `;
+
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').style.display = 'none';
+  }
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+function showPrintView() {
+  if (roster.length === 0) { alert('No units in roster.'); return; }
+  const total = roster.reduce((s,e) => s + calcEntryFOP(e), 0);
+
+  let lines = [`BREACHER — OPFOR ROSTER\nBudget: ${budget} FOP | Spent: ${total} FOP | Remaining: ${budget-total} FOP\n`];
+  lines.push('='.repeat(56));
+  roster.forEach((entry, idx) => {
+    const t = entry.template;
+    const fop = calcEntryFOP(entry);
+    lines.push(`\n${idx+1}. ${t.name.toUpperCase()} — ${entry.formation.toUpperCase()} (${fop} FOP)`);
+    lines.push(`   Models: ${entry.formation === 'individual' ? 1 : entry.models} | MOV:${t.stats.MOV} RC:${t.stats.RC} MC:${t.stats.MC} TECH:${t.stats.TECH} WND:${t.stats.WND} ARM:${t.stats.ARM}`);
+    if (entry.equipMode === 'individual' && entry.modelWeapons?.length) {
+      entry.modelWeapons.forEach((mw, i) => {
+        lines.push(`   Model ${i+1}: Primary: ${mw.primary||'—'} | Melee: ${mw.melee||'—'} | Secondary: ${mw.secondary||'—'}`);
+      });
+    } else {
+      if (entry.selectedPrimary) lines.push(`   Primary: ${entry.selectedPrimary}`);
+      if (entry.selectedMelee) lines.push(`   Melee 1: ${entry.selectedMelee}`);
+      if (entry.selectedMelee2) lines.push(`   Melee 2: ${entry.selectedMelee2}`);
+      if (entry.selectedSecondary) lines.push(`   Secondary: ${entry.selectedSecondary}`);
+    }
+    if (entry.selectedSupport) lines.push(`   Support: ${entry.selectedSupport}`);
+    const upgrades = Object.keys(entry.activeUpgrades).filter(k => entry.activeUpgrades[k]);
+    if (upgrades.length) lines.push(`   Upgrades: ${upgrades.join(', ')}`);
+  });
+  lines.push('\n' + '='.repeat(56));
+
+  const win = window.open('', '_blank');
+  win.document.write(`<pre style="font-family:monospace;background:#111;color:#eee;padding:20px;white-space:pre-wrap;">${lines.join('\n')}</pre>`);
+  win.document.close();
+}
+
+
+// ============================================================
+// SAVE / LOAD — BREACHER
+// ============================================================
+function saveBreacher() {
+  if (!bState.specialtyId) { alert('No Breacher configured to save.'); return; }
+  const data = JSON.stringify({ version: 1, type: 'breacher', state: bState }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const name = (bState.name || 'breacher').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  a.download = `breacher_${name}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function loadBreacherTrigger() {
+  document.getElementById('breacher-load-input').value = '';
+  document.getElementById('breacher-load-input').click();
+}
+
+function loadBreacher(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.type !== 'breacher') { alert('This file is not a Breacher save.'); return; }
+      // Validate specialtyId exists
+      const spec = SPECIALTIES.find(s => s.id === data.state.specialtyId);
+      if (!spec) { alert('Specialty not found — file may be from an older version.'); return; }
+      Object.assign(bState, data.state);
+      renderSpecialtyLibrary();
+      renderBreachers();
+      updateCE();
+    } catch (err) {
+      alert('Could not load file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// SAVE / LOAD — OPFOR ROSTER
+// ============================================================
+function saveRoster() {
+  if (roster.length === 0) { alert('Roster is empty.'); return; }
+  // Serialise roster — strip template object (it's reconstructable from templateId)
+  const saveable = roster.map(e => ({
+    uid: e.uid,
+    templateId: e.templateId,
+    formation: e.formation,
+    models: e.models,
+    selectedPrimary: e.selectedPrimary,
+    selectedSecondary: e.selectedSecondary,
+    selectedMelee: e.selectedMelee,
+    selectedMelee2: e.selectedMelee2,
+    selectedSupport: e.selectedSupport,
+    activeUpgrades: e.activeUpgrades,
+    equipMode: e.equipMode,
+    modelWeapons: e.modelWeapons,
+  }));
+  const data = JSON.stringify({ version: 1, type: 'opfor', budget, roster: saveable }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `opfor_roster.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function loadRosterTrigger() {
+  document.getElementById('roster-load-input').value = '';
+  document.getElementById('roster-load-input').click();
+}
+
+function loadRoster(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.type !== 'opfor') { alert('This file is not an OPFOR roster save.'); return; }
+      // Restore budget
+      budget = data.budget || 20;
+      document.getElementById('budget-input').value = budget;
+      // Reconstruct roster entries with template references
+      const allUnits = [...UNITS, ...PREMADE_HG];
+      roster = [];
+      let maxUid = 0;
+      for (const saved of data.roster) {
+        const template = allUnits.find(u => u.id === saved.templateId);
+        if (!template) { console.warn('Unknown unit id:', saved.templateId); continue; }
+        const entry = {
+          uid: saved.uid,
+          templateId: saved.templateId,
+          template,
+          formation: saved.formation,
+          models: saved.models,
+          selectedPrimary: saved.selectedPrimary ?? null,
+          selectedSecondary: saved.selectedSecondary ?? null,
+          selectedMelee: saved.selectedMelee ?? null,
+          selectedMelee2: saved.selectedMelee2 ?? null,
+          selectedSupport: saved.selectedSupport ?? null,
+          activeUpgrades: saved.activeUpgrades ?? {},
+          equipMode: saved.equipMode ?? 'all',
+          modelWeapons: saved.modelWeapons ?? [],
+        };
+        roster.push(entry);
+        if (saved.uid > maxUid) maxUid = saved.uid;
+      }
+      nextId = maxUid + 1;
+      renderRoster();
+      updateFOP();
+    } catch (err) {
+      alert('Could not load file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.querySelectorAll('.filter-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    renderLibrary();
+  });
+});
+
+document.getElementById('budget-input').addEventListener('input', function() {
+  budget = parseInt(this.value) || 0;
+  updateFOP();
+});
+
+renderLibrary();
+renderRoster();
+updateFOP();
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+let activeTab = 'breacher';
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-breacher').style.display = tab === 'breacher' ? 'grid' : 'none';
+  document.getElementById('tab-opfor').style.display = tab === 'opfor' ? 'grid' : 'none';
+  document.getElementById('breacher-header-controls').style.display = tab === 'breacher' ? 'flex' : 'none';
+  document.getElementById('opfor-header-controls').style.display = tab === 'opfor' ? 'flex' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// ============================================================
+// BREACHER DATA
+// ============================================================
+const SUB_AGENCIES = ['None / Independent', 'Wolf Pack', 'Tungsten', 'Triad', 'CORE', 'Sarie', 'Mediation Inc.'];
+
+const SUB_AGENCY_MANEUVERS = {
+  'Wolf Pack': [
+    { name: 'Fire Superiority', cost: '1 Momentum or Grit', desc: 'Add a Low Ammo token to this Unit, and then the next (A) Ranged attack this activation gains +1D4 damage.' },
+    { name: 'Courage Under Fire', cost: '1 Momentum or Grit', desc: 'This Unit takes 2 damage (ignoring armor) and removes an instance of Shaken. The Unit\'s next attack this activation is +1 damage for each of its Low Ammo tokens.' },
+    { name: 'Pack Tactics', cost: '1 Momentum or Grit', desc: 'When this Unit ends its movement within 2" of another Breacher, this Unit is marked with a Tactical Movement token.' },
+  ],
+  'Tungsten': [
+    { name: 'Improved Ceramics', cost: '1 Momentum or Grit', desc: 'When applying armor after an attack, increase this Unit\'s armor by 2. (AP) cannot reduce this bonus.' },
+    { name: 'Prototype Ammo', cost: '1 Momentum or Grit', desc: 'The next attack the Unit makes this activation gains 2 of the following: (AP), (DEV), (T), (SH), or +1 damage.' },
+    { name: 'Improved HUD', cost: '1 Momentum or Grit', desc: 'When this Unit uses a Momentum Point to turn and face a Unit that gained the Flanking bonus, this Unit is marked with an Overwatch token.' },
+  ],
+  'Triad': [
+    { name: 'Shukuchi', cost: '1 Momentum or Grit', desc: 'For the rest of this activation, this Unit counts all of its Melee Combat skill attacks as Flanking.' },
+    { name: 'Exploit Weakness', cost: '1 Momentum or Grit', desc: 'When this Unit uses a Secondary weapon in Melee combat, the Secondary weapon gains (AP) for the rest of the Maneuver.' },
+    { name: 'Hidden Arsenal', cost: '1 Momentum or Grit', desc: 'The next attack this Unit makes against a model in contact with it gains 2 of the following: (AP), (DEV), (T), (SH), or +1 damage.' },
+  ],
+  'CORE': [
+    { name: 'Secondary Explosions', cost: '1 Momentum or Grit', desc: 'When the Unit uses a grenade, increase the grenade\'s Duration by 1.' },
+    { name: 'Dominate the A.O.', cost: '1 Momentum or Grit', desc: 'If the Unit is within 2" of an objective or Breach Point, the next attack this Unit makes this activation gains (AP) and (DEV).' },
+    { name: 'Breach, Breach!', cost: '1 Momentum or Grit', desc: 'This Unit automatically passes the next Technical skill test when diving through a window or door. In addition, this Unit is marked with an Overwatch token.' },
+  ],
+};
+
+const SPECIALTIES = [
+  {
+    id: 'assault', name: 'Assault',
+    stats: { MOV:'5"', RC:14, MC:12, TECH:12, CMD:11, WND:20, GRIT:0 },
+    loadouts: [
+      { id:'A', armor:2, reloads:4, grenades:2, tacticalGear:5, mods:['CE +1'], label:'Loadout A' },
+      { id:'B', armor:2, reloads:4, grenades:2, tacticalGear:4, mods:['Movement -1', 'CE +1'], label:'Loadout B' },
+    ],
+    weaponChoices: 'Short Range OR Medium Range + 1 Melee + 1 Secondary',
+    primaryPool: ['Bolt Action Sniper (Hvy)', 'Semi-Auto Sniper (Med)', 'DMR (Med)', 'Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'PDW (Light)', 'Compact SMG (Light)', 'Automatic Pistol (Light)', 'Heavy Pistol (Hvy)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)', 'Sawed-Off (Buckshot)', 'LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+    supportPool: ['LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'], secondaryPool: ['Revolver', 'Semi-Auto Pistol'], meleePool: ['Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style', 'Fists and Kicks'], baseCE: 10,
+    specialRules: [
+      'Once per turn, a (SAX) Ranged Combat Maneuver this Breacher makes has a max of +1 shots.',
+      "When this Breacher takes an enemy unit out of action using the Stacked Mag Momentum Ability, gain 2 Momentum points. Stacked Mags does not give this Breacher a Low Ammo token.",
+    ],
+  },
+  {
+    id: 'covert', name: 'Covert',
+    stats: { MOV:'6"', RC:13, MC:13, TECH:13, CMD:9, WND:20, GRIT:0 },
+    loadouts: [
+      { id:'A', armor:2, reloads:3, grenades:1, tacticalGear:3, mods:['Movement +1'], label:'Loadout A' },
+      { id:'B', armor:2, reloads:4, grenades:2, tacticalGear:5, mods:['CE +1'], label:'Loadout B' },
+    ],
+    weaponChoices: 'Short Range OR Medium Range + 1 Melee + 1 Secondary',
+    primaryPool: ['Bolt Action Sniper (Hvy)', 'Semi-Auto Sniper (Med)', 'DMR (Med)', 'Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'PDW (Light)', 'Compact SMG (Light)', 'Automatic Pistol (Light)', 'Heavy Pistol (Hvy)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)', 'Sawed-Off (Buckshot)', 'LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+    supportPool: ['LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'], secondaryPool: ['Revolver', 'Semi-Auto Pistol'], meleePool: ['Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style', 'Fists and Kicks'], baseCE: 10,
+    specialRules: [
+      'This Breacher may begin the Operation in Concealment. Covert Concealment tokens may move up to 5".',
+      "When an enemy Unit is taken out of action by an attack from this Breacher\'s Concealment tokens, gain 1 Momentum point.",
+    ],
+  },
+  {
+    id: 'heavy-assault', name: 'Heavy Assault',
+    stats: { MOV:'5"', RC:14, MC:11, TECH:12, CMD:12, WND:20, GRIT:0 },
+    loadouts: [
+      { id:'A', armor:3, reloads:4, grenades:2, tacticalGear:4, mods:['CE +2'], label:'Loadout A' },
+      { id:'B', armor:4, reloads:4, grenades:1, tacticalGear:3, mods:['Movement -1', 'CE +2'], label:'Loadout B' },
+    ],
+    weaponChoices: 'Medium Range OR Support + 1 Melee + 1 Secondary',
+    primaryPool: ['Bolt Action Sniper (Hvy)', 'Semi-Auto Sniper (Med)', 'DMR (Med)', 'Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'PDW (Light)', 'Compact SMG (Light)', 'Automatic Pistol (Light)', 'Heavy Pistol (Hvy)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)', 'Sawed-Off (Buckshot)', 'LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'], supportPool: ['LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+    secondaryPool: ['Revolver', 'Semi-Auto Pistol'], meleePool: ['Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style', 'Fists and Kicks'], baseCE: 10,
+    specialRules: [
+      'This Breacher reduces the number of Low Ammo tokens they receive from Combat Maneuvers by 1 to a minimum of 1.',
+      'When this Breacher takes an enemy Unit Out of Action using the Full Auto Combat Maneuver, gain 1 Momentum.',
+    ],
+  },
+  {
+    id: 'marksman', name: 'Marksman',
+    stats: { MOV:'5"', RC:16, MC:10, TECH:11, CMD:12, WND:20, GRIT:0 },
+    loadouts: [
+      { id:'A', armor:2, reloads:3, grenades:1, tacticalGear:3, mods:['CE +1'], label:'Loadout A' },
+      { id:'B', armor:2, reloads:4, grenades:2, tacticalGear:5, mods:['CE +2'], label:'Loadout B' },
+    ],
+    weaponChoices: 'Medium Range OR Long Range + 1 Melee + 1 Secondary',
+    primaryPool: ['Bolt Action Sniper (Hvy)', 'Semi-Auto Sniper (Med)', 'DMR (Med)', 'Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'PDW (Light)', 'Compact SMG (Light)', 'Automatic Pistol (Light)', 'Heavy Pistol (Hvy)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)', 'Sawed-Off (Buckshot)', 'LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+    supportPool: ['LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'], secondaryPool: ['Revolver', 'Semi-Auto Pistol'], meleePool: ['Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style', 'Fists and Kicks'], baseCE: 10,
+    specialRules: [
+      'This Breacher may take 1 free Aim Maneuver each turn as part of a Movement Maneuver.',
+      'When this Breacher takes an enemy Unit Out of Action that started the activation at full health, gain 1 Momentum point.',
+    ],
+  },
+  {
+    id: 'hand-to-hand', name: 'Hand to Hand',
+    stats: { MOV:'5"', RC:10, MC:16, TECH:11, CMD:12, WND:20, GRIT:0 },
+    loadouts: [
+      { id:'A', armor:2, reloads:4, grenades:1, tacticalGear:3, mods:['Movement +1'], label:'Loadout A' },
+      { id:'B', armor:2, reloads:4, grenades:2, tacticalGear:5, mods:['CE +1'], label:'Loadout B' },
+    ],
+    weaponChoices: 'Short Range + Choose 2 Melee Weapons + 1 Secondary',
+    primaryPool: ['Bolt Action Sniper (Hvy)', 'Semi-Auto Sniper (Med)', 'DMR (Med)', 'Assault Rifle (Med)', 'Assault Rifle (Hvy)', 'SMG (Light)', 'SMG (Medium)', 'PDW (Light)', 'Compact SMG (Light)', 'Automatic Pistol (Light)', 'Heavy Pistol (Hvy)', 'Shotgun (Buckshot)', 'Shotgun (Slug)', 'Shotgun (Flechette)', 'Sawed-Off (Buckshot)', 'LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'],
+    supportPool: ['LMG (Med)', 'LMG PARA', 'Anti-Material Rifle', 'Carbine w/ Underslung GL', 'Grenade Launcher'], secondaryPool: ['Revolver', 'Semi-Auto Pistol'], meleePool: ['Stiletto Style', 'Chopper Style', 'Cutting Style', 'Blunt Style', 'Fists and Kicks'], dualMelee: true, baseCE: 10,
+    specialRules: [
+      'This Breacher may make 1 free Heavy Blow Maneuver each turn as part of another Combat Maneuver.',
+      'When this Breacher takes an enemy Unit out of action with the Heavy Blow Combat Maneuver, gain 1 Momentum point.',
+    ],
+  },
+];
+
+// ============================================================
+// BREACHER STATE
+// ============================================================
+
+// ============================================================
+// TACTICAL GEAR DATA
+// ============================================================
+const TACTICAL_GEAR = [
+  { id:'suppressor',      name:'Suppressor',               slots:1, ce:0,  effect:'First (PS) shot each Maneuver +2 to hit. Targeted units cannot spend Momentum to turn and face this Unit.' },
+  { id:'coms',            name:'Coms',                     slots:1, ce:0,  effect:'At the start of activation, roll D10. On 9-10, gain 1 Momentum point.' },
+  { id:'breaching-charge',name:'Breaching Charge',         slots:1, ce:0,  effect:'Place on wall within 1" as Movement Maneuver, detonate as Combat Maneuver. Makes 2"x1" opening in Cover 2 or less. Enemy Units within 3" become Shaken.' },
+  { id:'rope-rig',        name:'Rope and Fast Rig',        slots:1, ce:0,  effect:'When in contact with a wall, may move vertically. May use Run Maneuver up and down vertical surfaces.' },
+  { id:'hydration',       name:'Hydration Bladder',        slots:1, ce:0,  effect:'At the start of each activation, roll D10. On a 10, heal 3 wounds.' },
+  { id:'shemagh',         name:'Shemagh',                  slots:1, ce:0,  effect:'Start the game with 1 additional Momentum point.' },
+  { id:'ghillie',         name:'Ghillie Suit',             slots:1, ce:0,  effect:'When Prone or Bracing, Cover level +1. When not in Cover, counts as partially obscured; when partially obscured, counts as heavily obscured.' },
+  { id:'ballistic-helmet',name:'Ballistic Helmet',         slots:1, ce:0,  effect:'Ignore the first critical hit against this Unit.' },
+  { id:'survival-kit',    name:'Survival Tool Kit',        slots:1, ce:1,  effect:'1 use per Operation. After any non-damage roll, reroll the die/dice and choose either result.' },
+  { id:'mag-clamp',       name:'Mag Clamp',                slots:1, ce:0,  effect:'The first reload of the game is a free Maneuver combined with any other Maneuver.' },
+  { id:'quickdraw',       name:'Quickdraw Holster',        slots:1, ce:0,  effect:'Choose a Secondary weapon for the holster. When making (SA) or Melee attacks, may switch to Secondary and finish remaining attacks with it. Once per turn.' },
+  { id:'stab-plates',     name:'Stab Plates',              slots:1, ce:0,  effect:'Armor may be applied to Melee attack damage in addition to Ranged attack damage.' },
+  { id:'monocular',       name:'Monocular',                slots:1, ce:0,  effect:'+2 to Technical rolls to spot Concealment tokens and Traps.' },
+  { id:'chrono',          name:'Chrono',                   slots:1, ce:0,  effect:'+1 to Initiative rolls.' },
+  { id:'spare-mag',       name:'Spare Mag',                slots:1, ce:0,  effect:'The Breacher gains an additional reload.' },
+  { id:'laser-sight',     name:'Laser Sight',              slots:1, ce:0,  effect:'+1 bonus to the chosen weapon Short Range Band.' },
+  { id:'floating-rail',   name:'Floating Rail System',     slots:1, ce:0,  effect:'+1 bonus to the weapon Medium Range Band.' },
+  { id:'bipod',           name:'Bipod',                    slots:1, ce:0,  effect:'+1 bonus to Medium and Long Range Bands when Prone or Bracing.' },
+  { id:'optic-short',     name:'Short Range Optic',        slots:1, ce:0,  effect:'+1 Ranged Combat bonus on the first (SA) or (PS) shot within Short Range Band each Maneuver.' },
+  { id:'optic-medium',    name:'Medium Range Optic',       slots:1, ce:0,  effect:'+1 Ranged Combat bonus on the first (SA) or (PS) shot within Medium Range Band each Maneuver.' },
+  { id:'optic-long',      name:'Long Range Optic',         slots:1, ce:0,  effect:'+1 Ranged Combat bonus on the first (SA) or (PS) shot within Long Range Band each Maneuver.' },
+  { id:'backup-piece',    name:'Backup Piece',             slots:1, ce:1,  effect:'Adds Compact SMG as an additional Primary weapon with its own Ammo tokens, independent of other Primary weapon.' },
+  { id:'akimbo',          name:'Akimbo Pistols',           slots:1, ce:0,  effect:'Two Secondary weapons become an additional Primary. Semi-Auto becomes (SA3) +2 all bands. Revolver gains (DEV) +1 all bands.' },
+  { id:'ugl',             name:'Underslung Grenade Launcher', slots:2, ce:1, effect:'See p.127. Replaces the Secondary weapon.' },
+  { id:'drone',           name:'Personal Drone',           slots:2, ce:1,  effect:'Deploy drone as Maneuver, move with Movement. Spend 1 Momentum: use drone LoS for grenade, reduce Cover by 1, or reveal Concealment token within 8".' },
+  { id:'ifak',            name:'IFAK',                     slots:2, ce:0,  effect:'2 uses per Operation. Heal 2D5+remove Trauma (Technical test, fail counts as use); OR remove up to 2 Trauma; OR remove up to 2 Shaken.' },
+  { id:'civ-medkit',      name:'Civilian Medical Kit',     slots:1, ce:0,  effect:'2 uses per Operation. Technical test: heal D5 wounds; OR remove 1 Trauma.' },
+  { id:'guard-dog',       name:'Guard Dog',                slots:2, ce:0,  effect:'Place a Guard Dog model within 2" of the Breacher.' },
+  { id:'brsuit',          name:'Bullet Resistant Suit',    slots:0, ce:-1, effect:'Replaces standard loadout: Grenades 1, Reloads 2, Gear 2. Armor 1 in Short Range/Engaged; D3 at Medium and Long Range.' },
+];
+
+let bState = {
+  name: '',
+  specialtyId: null,
+  loadoutId: 'A',
+  subAgency: 'None / Independent',
+  primaryWeapon: null,
+  secondaryWeapon: null,
+  meleeWeapon: null,
+  meleeWeapon2: null,
+  grit: 0,
+  cryptoAvail: 0,
+  cryptoSpent: 0,
+  injuries: '',
+  gearItems: [],   // array of gear ids
+  grenadeItems: [], // array of grenade ids
+  supportWeapon: null,
+};
+
+let specFilter = 'all';
+
+// ============================================================
+// RENDER SPECIALTY LIBRARY
+// ============================================================
+function renderSpecialtyLibrary() {
+  const container = document.getElementById('specialty-library');
+  const filtered = specFilter === 'all' ? SPECIALTIES : SPECIALTIES.filter(s => s.name === specFilter);
+  container.innerHTML = '';
+
+  filtered.forEach(spec => {
+    const card = document.createElement('div');
+    card.className = 'spec-card' + (bState.specialtyId === spec.id ? ' selected' : '');
+    const ceRange = spec.loadouts.map(l => {
+      const mods = l.mods.join(', ');
+      return mods;
+    }).join(' / ');
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div class="spec-card-name">${spec.name}</div>
+        <div class="spec-card-ce">Base CE: ${spec.baseCE}</div>
+      </div>
+      <div class="unit-stats-mini" style="margin-top:6px;">
+        <div class="stat-pill"><span class="stat-pill-label">MOV</span><span class="stat-pill-val">${spec.stats.MOV}</span></div>
+        <div class="stat-pill"><span class="stat-pill-label">RC</span><span class="stat-pill-val">${spec.stats.RC}</span></div>
+        <div class="stat-pill"><span class="stat-pill-label">MC</span><span class="stat-pill-val">${spec.stats.MC}</span></div>
+        <div class="stat-pill"><span class="stat-pill-label">TECH</span><span class="stat-pill-val">${spec.stats.TECH}</span></div>
+        <div class="stat-pill"><span class="stat-pill-label">CMD</span><span class="stat-pill-val">${spec.stats.CMD}</span></div>
+        <div class="stat-pill"><span class="stat-pill-label">WND</span><span class="stat-pill-val">${spec.stats.WND}</span></div>
+      </div>
+
+    `;
+    card.addEventListener('click', () => selectSpecialty(spec.id));
+    container.appendChild(card);
+  });
+}
+
+function selectSpecialty(id) {
+  bState.specialtyId = id;
+  const spec = SPECIALTIES.find(s => s.id === id);
+  bState.loadoutId = 'A';
+  bState.primaryWeapon = null;
+  bState.secondaryWeapon = null;
+  bState.meleeWeapon = spec.meleePool[0] || null;
+  bState.meleeWeapon2 = spec.dualMelee ? (spec.meleePool[1] || spec.meleePool[0]) : null;
+  bState.grenadeItems = [];
+  renderSpecialtyLibrary();
+  renderBreachers();
+  updateCE();
+}
+
+// ============================================================
+// RENDER BREACHER SHEET
+// ============================================================
+function renderBreachers() {
+  const sheet = document.getElementById('breacher-sheet');
+
+  if (!bState.specialtyId) {
+    sheet.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-faint);gap:10px;">
+        <div style="font-size:48px;opacity:0.3;">⚡</div>
+        <div style="font-family:Oswald,sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;">Select a Specialty</div>
+      </div>`;
+    return;
+  }
+
+  const spec = SPECIALTIES.find(s => s.id === bState.specialtyId);
+  const loadout = spec.loadouts.find(l => l.id === bState.loadoutId) || spec.loadouts[0];
+
+  // Effective movement
+  let movMod = 0;
+  loadout.mods.forEach(m => {
+    if (m === 'Movement +1') movMod = 1;
+    if (m === 'Movement -1') movMod = -1;
+  });
+  const movEff = (parseInt(spec.stats.MOV) + movMod) + '"';
+
+  // Stats
+  const statsRows = [
+    { label: 'Movement',      val: movEff,        highlight: movMod !== 0 },
+    { label: 'Ranged Combat', val: spec.stats.RC  },
+    { label: 'Melee Combat',  val: spec.stats.MC  },
+    { label: 'Technical',     val: spec.stats.TECH},
+    { label: 'Command',       val: spec.stats.CMD },
+    { label: 'Wounds',        val: spec.stats.WND },
+    { label: 'Grit',          val: bState.grit > 0 ? bState.grit : '—' },
+    { label: 'Armor',         val: loadout.armor  },
+  ].map(r =>
+    `<div class="b-stat-row">
+      <span class="b-stat-label">${r.label}</span>
+      <span class="b-stat-val${r.highlight ? ' highlight' : ''}">${r.val}</span>
+    </div>`
+  ).join('');
+
+  // Loadout buttons — use data-loadout attribute, no inline onclick
+  const loadoutBtns = spec.loadouts.map(l =>
+    `<button class="b-loadout-btn${bState.loadoutId === l.id ? ' selected' : ''}" data-loadout="${l.id}">
+      <strong>${l.label}</strong><br>
+      Armor: ${l.armor} | Reloads: ${l.reloads}<br>
+      Grenades: ${l.grenades} | Gear: ${l.tacticalGear} slots<br>
+      ${l.mods.join(', ')}
+    </button>`
+  ).join('');
+
+  // Weapons
+  const esc = v => v.replace(/"/g, '&quot;');
+  const primaryOpts   = spec.primaryPool.map(w => `<option value="${esc(w)}"${bState.primaryWeapon===w?' selected':''}>${w}</option>`).join('');
+  const secOpts       = spec.secondaryPool.map(w => `<option value="${esc(w)}"${bState.secondaryWeapon===w?' selected':''}>${w}</option>`).join('');
+  const meleeOpts     = spec.meleePool.map(w => `<option value="${esc(w)}"${bState.meleeWeapon===w?' selected':''}>${w}</option>`).join('');
+  const melee2Opts    = spec.dualMelee ? spec.meleePool.map(w => `<option value="${esc(w)}"${bState.meleeWeapon2===w?' selected':''}>${w}</option>`).join('') : '';
+
+  let weaponHtml =
+    `<div class="b-weapon-row">
+      <div class="config-section-label">Primary</div>
+      <select class="config-select" style="width:100%;" data-weapon="primary"><option value="">— None —</option>${primaryOpts}</select>
+      ${bState.primaryWeapon ? renderWeaponProfile(bState.primaryWeapon) : ''}
+    </div>
+    <div class="b-weapon-row">
+      <div class="config-section-label">Melee</div>
+      <select class="config-select" style="width:100%;" data-weapon="melee">${meleeOpts}</select>
+      ${bState.meleeWeapon ? renderWeaponProfile(bState.meleeWeapon) : ''}
+    </div>`;
+  if (spec.dualMelee) {
+    weaponHtml +=
+      `<div class="b-weapon-row">
+        <div class="config-section-label">Melee 2</div>
+        <select class="config-select" style="width:100%;" data-weapon="melee2">${melee2Opts}</select>
+        ${bState.meleeWeapon2 ? renderWeaponProfile(bState.meleeWeapon2) : ''}
+      </div>`;
+  }
+  weaponHtml +=
+    `<div class="b-weapon-row">
+      <div class="config-section-label">Secondary</div>
+      <select class="config-select" style="width:100%;" data-weapon="secondary"><option value="">— None —</option>${secOpts}</select>
+      ${bState.secondaryWeapon ? renderWeaponProfile(bState.secondaryWeapon) : ''}
+    </div>`;
+
+
+  // Special rules
+  const rulesHtml = spec.specialRules.map((r,i) => `<p><strong>${i+1}.</strong> ${r}</p>`).join('');
+
+  // Sub-agency
+  const agencyMvrs = SUB_AGENCY_MANEUVERS[bState.subAgency];
+  const agencyHtml = agencyMvrs ? agencyMvrs.map(m =>
+    `<div style="margin-bottom:8px;padding:6px 8px;background:#0a0a0d;border-left:2px solid var(--accent);">
+      <div style="font-family:Oswald,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:2px;">${m.name} <span style="color:var(--text-dim);">(${m.cost})</span></div>
+      <div style="font-size:11px;color:var(--text);">${m.desc}</div>
+    </div>`
+  ).join('') : '<div style="font-size:11px;color:var(--text-dim);">No sub-agency selected.</div>';
+
+  const agencyOpts = SUB_AGENCIES.map(a =>
+    `<option value="${esc(a)}"${bState.subAgency===a?' selected':''}>${a}</option>`
+  ).join('');
+
+  sheet.innerHTML =
+    `<div class="b-name-row">
+      <input class="b-name-input" placeholder="BREACHER NAME" value="${esc(bState.name)}" data-field="name">
+      <div class="b-specialty-badge">${spec.name}</div>
+    </div>
+
+    <div class="b-campaign-row" style="margin-top:10px;">
+      <div class="b-campaign-field">
+        <span class="b-campaign-label">Grit (0–3)</span>
+        <input class="b-campaign-input" type="number" min="0" max="3" value="${bState.grit}" data-field="grit">
+      </div>
+      <div class="b-campaign-field">
+        <span class="b-campaign-label">Crypto Available</span>
+        <input class="b-campaign-input" type="number" min="0" value="${bState.cryptoAvail}" data-field="cryptoAvail">
+      </div>
+      <div class="b-campaign-field">
+        <span class="b-campaign-label">Crypto Spent</span>
+        <input class="b-campaign-input" type="number" min="0" value="${bState.cryptoSpent}" data-field="cryptoSpent">
+      </div>
+      <div class="b-campaign-field" style="flex:1;">
+        <span class="b-campaign-label">Injuries</span>
+        <input class="b-injuries-input" placeholder="None" value="${esc(bState.injuries)}" data-field="injuries">
+      </div>
+    </div>
+
+    <div class="breacher-sheet-grid">
+      <div class="b-stats-col">
+        <div class="b-section-title">Stats</div>
+        ${statsRows}
+      </div>
+      <div class="b-right-col">
+        <div class="b-loadout-card">
+          <div class="b-section-title">Loadout — Choose One</div>
+          <div class="b-loadout-options">${loadoutBtns}</div>
+          <div class="b-loadout-detail">
+            <strong>Armor:</strong> ${loadout.armor} &nbsp;|&nbsp;
+            <strong>Reloads:</strong> ${loadout.reloads} &nbsp;|&nbsp;
+            <strong>Grenades:</strong> ${loadout.grenades} slot${loadout.grenades!==1?'s':''} &nbsp;|&nbsp;
+            <strong>Tactical Gear:</strong> ${loadout.tacticalGear} slot${loadout.tacticalGear!==1?'s':''}
+          </div>
+        </div>
+        <div class="b-weapons-card">
+          <div class="b-section-title">Weapons</div>
+          ${weaponHtml}
+        </div>
+        ${renderGearSection(loadout.tacticalGear)}
+        ${renderGrenadeSection(loadout.grenades)}
+        <div class="b-special-rules">
+          <div class="b-section-title">Special Rules</div>
+          ${rulesHtml}
+        </div>
+        <div class="b-loadout-card">
+          <div class="b-section-title">Sub-Agency</div>
+          <select class="b-sub-agency-select" data-field="subAgency">${agencyOpts}</select>
+          ${agencyHtml}
+        </div>
+      </div>
+    </div>`;
+
+  // Attach all events via delegation on the sheet container
+  attachBreachers(sheet, spec);
+}
+
+function attachBreachers(sheet, spec) {
+  // Loadout buttons
+  sheet.querySelectorAll('[data-loadout]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      bState.loadoutId = btn.dataset.loadout;
+      renderBreachers();
+      updateCE();
+    });
+  });
+
+  // Weapon selects
+  sheet.querySelectorAll('[data-weapon]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      bUpdateWeapon(sel.dataset.weapon, sel.value);
+    });
+  });
+
+  // Gear items
+  sheet.querySelectorAll('[data-gear]').forEach(el => {
+    el.addEventListener('click', () => { toggleGear(el.dataset.gear); });
+  });
+
+  // Grenade items
+  sheet.querySelectorAll('[data-grenade]').forEach(el => {
+    el.addEventListener('click', () => { toggleGrenade(el.dataset.grenade); });
+  });
+
+  // Text/number inputs
+  sheet.querySelectorAll('[data-field]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const f = inp.dataset.field;
+      if (f === 'grit') {
+        bState.grit = Math.min(3, Math.max(0, parseInt(inp.value) || 0));
+        renderBreachers();
+      } else if (f === 'cryptoSpent') {
+        bState.cryptoSpent = parseInt(inp.value) || 0;
+        updateCE();
+      } else if (f === 'cryptoAvail') {
+        bState.cryptoAvail = parseInt(inp.value) || 0;
+      } else if (f === 'subAgency') {
+        bState.subAgency = inp.value;
+        renderBreachers();
+      } else {
+        bState[f] = inp.value;
+      }
+    });
+  });
+}
+
+function selectLoadout(id) {
+  bState.loadoutId = id;
+  renderBreachers();
+  updateCE();
+}
+
+function bUpdateWeapon(slot, val) {
+  if (slot === 'primary') bState.primaryWeapon = val || null;
+  if (slot === 'secondary') bState.secondaryWeapon = val || null;
+  if (slot === 'melee') bState.meleeWeapon = val;
+  if (slot === 'melee2') bState.meleeWeapon2 = val;
+  renderBreachers();
+  updateCE();
+}
+
+function updateCE() {
+  if (!bState.specialtyId) { document.getElementById('ce-display').textContent = '—'; return; }
+  const spec = SPECIALTIES.find(s => s.id === bState.specialtyId);
+  const loadout = spec.loadouts.find(l => l.id === bState.loadoutId) || spec.loadouts[0];
+  let ce = spec.baseCE;
+
+  // Loadout CE modifier
+  loadout.mods.forEach(m => {
+    const match = m.match(/CE \+(\d+)/);
+    if (match) ce += parseInt(match[1]);
+  });
+
+  // CE from selected weapons
+  const selectedWeapons = [bState.primaryWeapon, bState.secondaryWeapon, bState.meleeWeapon, bState.meleeWeapon2].filter(Boolean);
+  selectedWeapons.forEach(wName => {
+    const w = WEAPONS[wName];
+    if (w && w.ce) ce += w.ce;
+  });
+
+  // CE from tactical gear
+  ce += gearCEBonus();
+
+  // Each 2 crypto spent = +1 CE from specialty maneuvers/grit purchases
+  ce += Math.floor(bState.cryptoSpent / 2);
+
+  document.getElementById('ce-display').textContent = ce;
+}
+
+
+// ============================================================
+// TACTICAL GEAR HELPERS
+// ============================================================
+function gearSlotsUsed() {
+  return bState.gearItems.reduce((sum, id) => {
+    const g = TACTICAL_GEAR.find(x => x.id === id);
+    return sum + (g ? g.slots : 0);
+  }, 0);
+}
+
+function gearCEBonus() {
+  return bState.gearItems.reduce((sum, id) => {
+    const g = TACTICAL_GEAR.find(x => x.id === id);
+    return sum + (g ? g.ce : 0);
+  }, 0);
+}
+
+
+// ============================================================
+// GRENADE HELPERS
+// ============================================================
+function grenadeSlotsUsed() {
+  return bState.grenadeItems.reduce((sum, id) => {
+    const g = GRENADES.find(x => x.id === id);
+    return sum + (g ? g.slots : 0);
+  }, 0);
+}
+
+function toggleGrenade(id) {
+  const idx = bState.grenadeItems.indexOf(id);
+  if (idx >= 0) {
+    bState.grenadeItems.splice(idx, 1);
+  } else {
+    bState.grenadeItems.push(id);
+  }
+  renderBreachers();
+}
+
+function renderGrenadeSection(maxSlots) {
+  const used = grenadeSlotsUsed();
+  const countCls = used > maxSlots ? 'over' : used >= maxSlots ? 'warn' : 'ok';
+
+  const totalPips = Math.max(maxSlots, used);
+  let pips = '';
+  for (let i = 0; i < totalPips; i++) {
+    const cls = i < used ? (used > maxSlots ? 'over' : 'used') : '';
+    pips += `<div class="b-slot-pip ${cls}"></div>`;
+  }
+
+  const items = GRENADES.map(g => {
+    const sel = bState.grenadeItems.includes(g.id);
+    const slotBadgeCls = g.slots === 2 ? 'two' : '';
+    const slotLabel = g.slots === 2 ? '2 slots' : '1 slot';
+    return `<div class="b-grenade-item${sel ? ' selected' : ''}" data-grenade="${g.id}">
+      <div class="b-grenade-check">${sel ? '✓' : ''}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="b-grenade-name">
+          ${g.name}
+          <span class="b-grenade-badge ${slotBadgeCls}">${slotLabel}</span>
+          <span class="b-grenade-badge">BL: ${g.blast}</span>
+          <span class="b-grenade-badge" style="color:var(--amber);border-color:var(--amber);">${g.damage}</span>
+          <span class="b-grenade-badge" style="color:var(--green);border-color:var(--green);">${g.duration}</span>
+        </div>
+        <div class="b-grenade-stats">
+          <span>Range: ${g.range}</span>
+          <span>${g.effect}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="b-grenade-section">
+    <div class="b-section-title">Grenades</div>
+    <div class="b-gear-slot-bar">
+      <div class="b-slot-label">Slots</div>
+      <div class="b-slot-pips">${pips}</div>
+      <div class="b-slot-count ${countCls}">${used} / ${maxSlots}</div>
+    </div>
+    <div class="b-grenade-grid">${items}</div>
+  </div>`;
+}
+
+function toggleGear(id) {
+  const idx = bState.gearItems.indexOf(id);
+  if (idx >= 0) {
+    bState.gearItems.splice(idx, 1);
+  } else {
+    bState.gearItems.push(id);
+  }
+  renderBreachers();
+  updateCE();
+}
+
+function renderGearSection(maxSlots) {
+  const used = gearSlotsUsed();
+  const remaining = maxSlots - used;
+
+  // Slot pips
+  const totalPips = Math.max(maxSlots, used);
+  let pips = '';
+  for (let i = 0; i < totalPips; i++) {
+    const cls = i < used ? (used > maxSlots ? 'over' : 'used') : '';
+    pips += `<div class="b-slot-pip ${cls}"></div>`;
+  }
+
+  const countCls = used > maxSlots ? 'over' : used >= maxSlots - 1 ? 'warn' : 'ok';
+
+  // Gear grid — use data-gear attribute, no inline onclick
+  const gridItems = TACTICAL_GEAR.map(g => {
+    const sel = bState.gearItems.includes(g.id);
+    const ceClass = g.ce !== 0 ? 'ce-item' : '';
+    const slotBadgeCls = g.slots === 2 ? 'two' : '';
+    const slotLabel = g.slots === 0 ? 'special' : g.slots === 2 ? '2 slots' : '1 slot';
+    const ceBadge = g.ce !== 0 ? `<span class="b-gear-ce-badge">${g.ce > 0 ? '+' : ''}${g.ce} CE</span>` : '';
+    return `<div class="b-gear-item ${sel ? 'selected' : ''} ${ceClass}" data-gear="${g.id}">
+        <div class="b-gear-check">${sel ? '✓' : ''}</div>
+        <div class="b-gear-info">
+          <div class="b-gear-name">
+            ${g.name}
+            <span class="b-gear-slots-badge ${slotBadgeCls}">${slotLabel}</span>
+            ${ceBadge}
+          </div>
+          <div class="b-gear-effect">${g.effect}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Selected tags — also data-gear
+  const tags = bState.gearItems.map(id => {
+    const g = TACTICAL_GEAR.find(x => x.id === id);
+    if (!g) return '';
+    return `<div class="b-gear-tag" data-gear="${g.id}" title="Click to remove">${g.name} <span class="remove-x">✕</span></div>`;
+  }).join('');
+
+  return `
+    <div class="b-gear-section">
+      <div class="b-section-title">Tactical Gear</div>
+      <div class="b-gear-slot-bar">
+        <div class="b-slot-label">Slots</div>
+        <div class="b-slot-pips">${pips}</div>
+        <div class="b-slot-count ${countCls}">${used} / ${maxSlots}</div>
+      </div>
+      <div class="b-gear-grid">${gridItems}</div>
+      ${tags ? '<div class="b-gear-selected-list">' + tags + '</div>' : ''}
+    </div>
+  `;
+}
+
+function resetBreacher() {
+  if (!confirm('Reset Breacher sheet?')) return;
+  bState = { name:'', specialtyId:null, loadoutId:'A', subAgency:'None / Independent', primaryWeapon:null, secondaryWeapon:null, meleeWeapon:null, meleeWeapon2:null, grit:0, cryptoAvail:0, cryptoSpent:0, injuries:'', gearItems:[], grenadeItems:[] };
+  renderSpecialtyLibrary();
+  renderBreachers();
+  updateCE();
+}
+
+function exportBreacher() {
+  if (!bState.specialtyId) { alert('No Breacher configured.'); return; }
+  const spec = SPECIALTIES.find(s => s.id === bState.specialtyId);
+  const loadout = spec.loadouts.find(l => l.id === bState.loadoutId) || spec.loadouts[0];
+  let movMod = 0;
+  loadout.mods.forEach(m => { if (m==='Movement +1') movMod=1; if (m==='Movement -1') movMod=-1; });
+  const movEff = (parseInt(spec.stats.MOV)+movMod)+'"';
+  const lines = [
+    `BREACHER SHEET`,
+    `Name: ${bState.name || '(unnamed)'}  |  Specialty: ${spec.name}  |  Sub-Agency: ${bState.subAgency}`,
+    `CE: ${document.getElementById('ce-display').textContent}  |  Crypto Available: ${bState.cryptoAvail}  |  Crypto Spent: ${bState.cryptoSpent}`,
+    '='.repeat(56),
+    `STATS`,
+    `Movement: ${movEff}  RC: ${spec.stats.RC}  MC: ${spec.stats.MC}  TECH: ${spec.stats.TECH}  CMD: ${spec.stats.CMD}`,
+    `Wounds: ${spec.stats.WND}  Grit: ${bState.grit}  Armor: ${loadout.armor}`,
+    `LOADOUT ${loadout.id}: Reloads: ${loadout.reloads} | Grenades: ${loadout.grenades} | Gear: ${loadout.tacticalGear} slots`,
+    `Gear Slots Used: ${gearSlotsUsed()} / ${loadout.tacticalGear}`,
+    `Tactical Gear: ${bState.gearItems.length ? bState.gearItems.map(id => { const g = TACTICAL_GEAR.find(x => x.id === id); return g ? g.name : id; }).join(', ') : 'None'}`,
+    `WEAPONS`,
+    `Primary: ${bState.primaryWeapon || '—'}`,
+    `Melee: ${bState.meleeWeapon || '—'}${bState.meleeWeapon2 ? ' / '+bState.meleeWeapon2 : ''}`,
+    `Secondary: ${bState.secondaryWeapon || '—'}`,
+    `Injuries: ${bState.injuries || 'None'}`,
+    '='.repeat(56),
+    `SPECIAL RULES`,
+    ...spec.specialRules.map((r,i) => `${i+1}. ${r}`),
+  ];
+  const win = window.open('', '_blank');
+  win.document.write(`<pre style="font-family:monospace;background:#111;color:#eee;padding:20px;white-space:pre-wrap;">${lines.join('\n')}</pre>`);
+  win.document.close();
+}
+
+// Specialty filter tabs
+document.querySelectorAll('[data-spec-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-spec-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    specFilter = btn.dataset.specFilter;
+    renderSpecialtyLibrary();
+  });
+});
+
+// Init Breacher tab
+renderSpecialtyLibrary();
+renderBreachers();
+updateCE();
+// Start on Breacher tab
+switchTab('breacher');
+
+</script>
+</body>
+</html>
