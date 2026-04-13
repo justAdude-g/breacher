@@ -1486,6 +1486,158 @@
   html.theme-dark .weapon-table td { border-bottom-color: #1a1a1f; }
   html.theme-dark .weapon-table tr:hover td { background: #1a1a20; }
 
+  /* ── MOBILE RESPONSIVE ───────────────────────────────────── */
+  @media (max-width: 768px) {
+
+    /* Header — compact */
+    header {
+      padding: 0 12px;
+      height: auto;
+      min-height: 56px;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    .logo { font-size: 18px; letter-spacing: 2px; }
+
+    .tab-nav { gap: 4px; }
+    .tab-btn { font-size: 11px; letter-spacing: 1px; padding: 6px 12px; height: 36px; }
+
+    .fop-counter { gap: 8px; }
+    .fop-display { font-size: 28px; }
+    .fop-label { font-size: 9px; }
+    .budget-label { font-size: 9px; }
+    #budget-input { font-size: 16px; width: 44px; }
+    .remaining-label { font-size: 9px; }
+    .remaining-val { font-size: 14px; }
+    .theme-toggle { width: 32px; height: 32px; font-size: 14px; }
+
+    /* App — single column, full height scroll */
+    .app {
+      grid-template-columns: 1fr;
+      height: auto;
+      min-height: calc(100vh - 56px);
+    }
+
+    /* Sidebar — collapsible via mobile panel toggle */
+    .sidebar {
+      border-right: none;
+      border-bottom: 2px solid var(--red);
+      max-height: 320px;
+    }
+
+    .sidebar-header { padding: 10px 12px 8px; }
+    .sidebar-title { font-size: 10px; margin-bottom: 8px; }
+
+    .filter-tab { font-size: 10px; padding: 5px 8px; }
+
+    .unit-list { padding: 6px; }
+
+    .unit-card { padding: 8px 10px; }
+    .unit-name { font-size: 13px; }
+    .add-btn { position: static; display: block; width: 100%; margin-top: 8px; padding: 8px; font-size: 12px; }
+
+    /* Roster panel */
+    .roster-panel { overflow: visible; }
+    .roster-list { overflow-y: visible; flex: none; }
+
+    .roster-header { padding: 10px 12px; flex-wrap: wrap; gap: 6px; }
+    .roster-title { font-size: 10px; }
+    .action-btn { font-size: 10px; padding: 6px 10px; }
+
+    /* Roster entries */
+    .entry-header {
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px 10px;
+    }
+
+    .entry-name { font-size: 13px; min-width: 80px; }
+    .entry-fop { font-size: 18px; }
+
+    .entry-body {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 8px 10px;
+    }
+
+    .entry-stats {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stat-box-label { font-size: 9px; }
+    .stat-box-val { font-size: 18px; }
+
+    .config-select { font-size: 14px; padding: 8px 6px; }
+
+    .counter-btn { width: 32px; height: 32px; font-size: 16px; }
+    .model-count-val { font-size: 18px; }
+
+    .form-btn { padding: 6px 10px; font-size: 10px; }
+
+    .upgrade-toggle { padding: 6px 10px; font-size: 10px; }
+
+    .entry-upgrades { gap: 6px; padding-top: 8px; }
+
+    /* Footer */
+    .roster-footer { padding: 8px 12px; }
+    .footer-summary { gap: 12px; flex-wrap: wrap; }
+    .summary-stat-val { font-size: 16px; }
+
+    /* Breacher tab */
+    #breacher-sidebar { max-height: 300px; }
+    #breacher-sidebar .sidebar { max-height: 300px; }
+
+    .spec-card { padding: 8px 10px; }
+    .spec-card-name { font-size: 13px; }
+
+    .b-name-row { padding: 8px 12px 0; flex-wrap: wrap; gap: 6px; }
+    .b-name-input { font-size: 16px; }
+
+    .b-campaign-row { padding: 0 12px 8px; gap: 8px; flex-wrap: wrap; }
+    .b-campaign-input { font-size: 16px; width: 70px; }
+    .b-injuries-input { width: 100%; font-size: 13px; }
+
+    .breacher-sheet-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 10px 12px;
+    }
+
+    .b-stat-row { padding: 6px 10px; }
+    .b-stat-label { font-size: 11px; }
+    .b-stat-val { font-size: 20px; }
+
+    .b-loadout-options { grid-template-columns: 1fr; }
+    .b-loadout-btn { padding: 10px; font-size: 12px; }
+
+    .b-gear-grid { grid-template-columns: 1fr; max-height: none; }
+    .b-gear-name { font-size: 12px; }
+    .b-gear-effect { font-size: 10px; }
+
+    .b-grenade-grid { gap: 6px; }
+
+    .b-sub-agency-select { font-size: 14px; padding: 8px; }
+
+    .config-section-label { font-size: 10px; }
+
+    /* Modal */
+    .modal { width: 95vw; max-height: 90vh; }
+    .modal-stat-grid { grid-template-columns: repeat(3, 1fr); }
+
+    /* Alerts */
+    .alert { font-size: 10px; }
+  }
+
+  @media (max-width: 400px) {
+    .logo { font-size: 15px; }
+    .tab-btn { font-size: 10px; padding: 5px 8px; }
+    .entry-stats { grid-template-columns: repeat(2, 1fr); }
+    .modal-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
   /* Print roster button */
   @media print {
     header, .sidebar, .roster-footer .action-btn { display: none; }
@@ -1516,7 +1668,7 @@
       </div>
     </div>
     <div>
-      <div class="fop-label">Force Organization Points</div>
+      <div class="fop-label">Total Spent</div>
       <div class="fop-display" id="total-fop">0</div>
     </div>
   </div>
@@ -1596,6 +1748,7 @@
     <div class="roster-header">
       <div class="roster-title">Active Roster</div>
       <div class="roster-actions">
+        <button class="action-btn mobile-panel-toggle" onclick="toggleMobilePanel()" id="mobile-panel-btn" style="display:none;">📋 Library</button>
         <button class="action-btn" onclick="showPrintView()">Print</button>
         <button class="action-btn" onclick="saveRoster()">💾 Save</button>
         <button class="action-btn" onclick="loadRosterTrigger()">📂 Load</button>
@@ -2761,6 +2914,36 @@ document.getElementById('budget-input').addEventListener('input', function() {
   budget = parseInt(this.value) || 0;
   updateFOP();
 });
+
+// ============================================================
+// MOBILE PANEL TOGGLE
+// ============================================================
+let mobilePanelShowingLibrary = false;
+
+function toggleMobilePanel() {
+  mobilePanelShowingLibrary = !mobilePanelShowingLibrary;
+  const sidebar = document.querySelector('#tab-opfor .sidebar');
+  const btn = document.getElementById('mobile-panel-btn');
+  if (sidebar) {
+    sidebar.style.display = mobilePanelShowingLibrary ? 'flex' : 'none';
+    btn.textContent = mobilePanelShowingLibrary ? '📋 Roster' : '📋 Library';
+  }
+}
+
+function handleMobileLayout() {
+  const isMobile = window.innerWidth <= 768;
+  const btn = document.getElementById('mobile-panel-btn');
+  const sidebar = document.querySelector('#tab-opfor .sidebar');
+  if (btn) btn.style.display = isMobile ? 'inline-block' : 'none';
+  if (sidebar && isMobile && !mobilePanelShowingLibrary) {
+    sidebar.style.display = 'none';
+  } else if (sidebar && !isMobile) {
+    sidebar.style.display = '';
+  }
+}
+
+window.addEventListener('resize', handleMobileLayout);
+handleMobileLayout();
 
 renderLibrary();
 renderRoster();
