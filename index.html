@@ -6,7 +6,24 @@
 <title>Breacher // OPFOR Builder</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:wght@300;400;700&family=Oswald:wght@300;500;700&display=swap" rel="stylesheet">
 <style>
+  /* ── THEMES ─────────────────────────────────────────────── */
   :root {
+    --bg: #eaeaec;
+    --panel: #f5f5f6;
+    --panel2: #ebebed;
+    --border: #c8c8ce;
+    --red: #c0392b;
+    --red-bright: #e74c3c;
+    --red-dim: #f5c6c2;
+    --amber: #b07d10;
+    --text: #1a1a1e;
+    --text-dim: #4a4a52;
+    --text-faint: #8a8a94;
+    --green: #1e8449;
+    --accent: #1a6fad;
+  }
+
+  html.theme-dark {
     --bg: #0d0d0f;
     --panel: #141418;
     --panel2: #1a1a20;
@@ -22,6 +39,11 @@
     --accent: #3d8fd1;
   }
 
+  /* Smooth theme transition */
+  *, *::before, *::after {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -35,7 +57,7 @@
 
   /* HEADER */
   header {
-    background: linear-gradient(180deg, #0a0a0c 0%, var(--bg) 100%);
+    background: linear-gradient(180deg, #e0e0e2 0%, var(--bg) 100%);
     border-bottom: 2px solid var(--red);
     padding: 0 24px;
     display: flex;
@@ -201,7 +223,7 @@
 
   .unit-card:hover {
     border-left-color: var(--red);
-    background: #1e1e26;
+    background: #dddde0;
   }
 
   .unit-card.type-street-thug { border-left-color: #555; }
@@ -479,7 +501,7 @@
 
   .stat-box {
     text-align: center;
-    background: #0f0f12;
+    background: #e8e8eb;
     padding: 6px 4px;
     border: 1px solid var(--border);
   }
@@ -525,7 +547,7 @@
   }
 
   .config-select {
-    background: #0f0f12;
+    background: #e8e8eb;
     border: 1px solid var(--border);
     color: var(--text);
     font-family: 'Roboto Condensed', sans-serif;
@@ -587,7 +609,7 @@
   }
 
   .upgrade-toggle {
-    background: #0f0f12;
+    background: #e8e8eb;
     border: 1px solid var(--border);
     color: var(--text-dim);
     font-family: 'Oswald', sans-serif;
@@ -610,7 +632,7 @@
     color: var(--text-dim);
     margin-top: 2px;
     padding: 3px 6px;
-    background: #0a0a0d;
+    background: #dedede;
     border-left: 2px solid var(--border);
   }
 
@@ -756,7 +778,7 @@
 
   .modal-stat {
     text-align: center;
-    background: #0f0f12;
+    background: #e8e8eb;
     border: 1px solid var(--border);
     padding: 6px 4px;
   }
@@ -781,7 +803,7 @@
     font-size: 12px;
     color: var(--text-dim);
     line-height: 1.6;
-    background: #0f0f12;
+    background: #e8e8eb;
     border: 1px solid var(--border);
     padding: 8px 10px;
   }
@@ -805,12 +827,12 @@
 
   .weapon-table td {
     padding: 5px 6px;
-    border-bottom: 1px solid #1a1a1f;
+    border-bottom: 1px solid #d0d0d4;
     color: var(--text-dim);
     vertical-align: top;
   }
 
-  .weapon-table tr:hover td { background: #1a1a20; }
+  .weapon-table tr:hover td { background: #dcdcdf; }
 
   .wt-name { color: var(--text); font-weight: 700; }
   .wt-dmg { color: var(--amber); }
@@ -852,7 +874,7 @@
   .equip-mode-btn:hover:not(.active) { border-color: var(--red-dim); color: var(--text); }
 
   .model-weapon-row {
-    background: #0a0a0d;
+    background: #dedede;
     border: 1px solid var(--border);
     border-left: 2px solid var(--text-faint);
     padding: 6px 8px;
@@ -952,7 +974,7 @@
     width: 14px;
     height: 14px;
     border: 1px solid var(--border);
-    background: #0a0a0d;
+    background: #dedede;
     border-radius: 2px;
     transition: background 0.15s;
   }
@@ -991,7 +1013,7 @@
     display: flex;
     align-items: flex-start;
     gap: 6px;
-    background: #0f0f12;
+    background: #e8e8eb;
     border: 1px solid var(--border);
     padding: 5px 7px;
     cursor: pointer;
@@ -999,7 +1021,7 @@
     position: relative;
   }
 
-  .b-gear-item:hover { border-color: var(--red-dim); background: #17171e; }
+  .b-gear-item:hover { border-color: var(--red-dim); background: #d8d8db; }
 
   .b-gear-item.selected {
     border-color: var(--red);
@@ -1158,7 +1180,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #0f0f12;
+    background: #e8e8eb;
     border: 1px solid var(--border);
     padding: 5px 10px;
   }
@@ -1202,7 +1224,7 @@
   }
 
   .b-loadout-btn {
-    background: #0f0f12;
+    background: #e8e8eb;
     border: 2px solid var(--border);
     color: var(--text);
     font-family: 'Oswald', sans-serif;
@@ -1222,7 +1244,7 @@
   .b-loadout-detail {
     font-size: 11px;
     color: var(--text);
-    background: #0a0a0d;
+    background: #dedede;
     border: 1px solid var(--border);
     padding: 6px 10px;
     line-height: 1.7;
@@ -1311,7 +1333,7 @@
     transition: all 0.15s;
   }
 
-  .spec-card:hover { border-left-color: var(--red); background: #1e1e26; }
+  .spec-card:hover { border-left-color: var(--red); background: #dddde0; }
   .spec-card.selected { border-left-color: var(--red-bright); background: #1e1518; }
 
   .spec-card-name {
@@ -1368,14 +1390,14 @@
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    background: #0f0f12;
+    background: #e8e8eb;
     border: 1px solid var(--border);
     padding: 6px 8px;
     cursor: pointer;
     transition: all 0.12s;
   }
 
-  .b-grenade-item:hover { border-color: var(--red-dim); background: #17171e; }
+  .b-grenade-item:hover { border-color: var(--red-dim); background: #d8d8db; }
   .b-grenade-item.selected { border-color: var(--red); background: var(--red-dim); }
 
   .b-grenade-check { font-size: 11px; color: var(--red-bright); min-width: 12px; margin-top: 1px; }
@@ -1420,6 +1442,50 @@
     margin-bottom: 8px;
   }
 
+  /* THEME TOGGLE BUTTON */
+  .theme-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { border-color: var(--red); }
+
+  /* Dark mode overrides for hardcoded colours */
+  html.theme-dark .unit-card:hover,
+  html.theme-dark .unit-card.type-street-thug:hover,
+  html.theme-dark .unit-card.type-militia:hover,
+  html.theme-dark .unit-card.type-trained:hover,
+  html.theme-dark .unit-card.type-hired-gun:hover,
+  html.theme-dark .unit-card.type-named-hg:hover { background: #1e1e26; }
+
+  html.theme-dark .stat-box,
+  html.theme-dark .config-select,
+  html.theme-dark .b-stat-row,
+  html.theme-dark .b-loadout-btn,
+  html.theme-dark .b-gear-item,
+  html.theme-dark .b-grenade-item,
+  html.theme-dark .model-weapon-row { background: #0f0f12; }
+
+  html.theme-dark .b-gear-item:hover { background: #17171e; }
+  html.theme-dark .b-gear-grid::-webkit-scrollbar-thumb { background: #2a2a35; }
+
+  html.theme-dark .weapon-profile-row,
+  html.theme-dark .b-special-rules,
+  html.theme-dark .b-loadout-detail { background: #0a0a0d; }
+
+  html.theme-dark .weapon-table td { border-bottom-color: #1a1a1f; }
+  html.theme-dark .weapon-table tr:hover td { background: #1a1a20; }
+
   /* Print roster button */
   @media print {
     header, .sidebar, .roster-footer .action-btn { display: none; }
@@ -1460,6 +1526,7 @@
       <div class="fop-display" id="ce-display" style="color:var(--accent);">10</div>
     </div>
   </div>
+  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Switch theme">🌙</button>
 </header>
 
 <!-- BREACHER TAB -->
@@ -2531,7 +2598,7 @@ function showPrintView() {
   lines.push('\n' + '='.repeat(56));
 
   const win = window.open('', '_blank');
-  win.document.write(`<pre style="font-family:monospace;background:#111;color:#eee;padding:20px;white-space:pre-wrap;">${lines.join('\n')}</pre>`);
+  win.document.write(`<pre style="font-family:monospace;background:#f5f5f6;color:#1a1a1e;padding:20px;white-space:pre-wrap;">${lines.join('\n')}</pre>`);
   win.document.close();
 }
 
@@ -2657,6 +2724,26 @@ function loadRoster(input) {
   };
   reader.readAsText(file);
 }
+
+// ============================================================
+// THEME
+// ============================================================
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle('theme-dark');
+  document.getElementById('theme-toggle').textContent = isDark ? '☀️' : '🌙';
+  try { localStorage.setItem('breacher-theme', isDark ? 'dark' : 'light'); } catch(e) {}
+}
+
+// Apply saved theme on load
+(function() {
+  try {
+    const saved = localStorage.getItem('breacher-theme');
+    if (saved === 'dark') {
+      document.documentElement.classList.add('theme-dark');
+      document.getElementById('theme-toggle').textContent = '☀️';
+    }
+  } catch(e) {}
+})();
 
 // ============================================================
 // INIT
@@ -3003,7 +3090,7 @@ function renderBreachers() {
   // Sub-agency
   const agencyMvrs = SUB_AGENCY_MANEUVERS[bState.subAgency];
   const agencyHtml = agencyMvrs ? agencyMvrs.map(m =>
-    `<div style="margin-bottom:8px;padding:6px 8px;background:#0a0a0d;border-left:2px solid var(--accent);">
+    `<div style="margin-bottom:8px;padding:6px 8px;background:#dedede;border-left:2px solid var(--accent);">
       <div style="font-family:Oswald,sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:2px;">${m.name} <span style="color:var(--text-dim);">(${m.cost})</span></div>
       <div style="font-size:11px;color:var(--text);">${m.desc}</div>
     </div>`
@@ -3353,7 +3440,7 @@ function exportBreacher() {
     ...spec.specialRules.map((r,i) => `${i+1}. ${r}`),
   ];
   const win = window.open('', '_blank');
-  win.document.write(`<pre style="font-family:monospace;background:#111;color:#eee;padding:20px;white-space:pre-wrap;">${lines.join('\n')}</pre>`);
+  win.document.write(`<pre style="font-family:monospace;background:#f5f5f6;color:#1a1a1e;padding:20px;white-space:pre-wrap;">${lines.join('\n')}</pre>`);
   win.document.close();
 }
 
